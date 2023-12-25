@@ -1,0 +1,13 @@
+# .gitignore
+
+# Node.js
+scripvault-frontend/node_modules/
+
+# Backend dependencies (assuming they are inside a 'backend' directory)
+server/node_modules/
+
+# Environment variables
+.env
+server/.env
+
+# Other files and directories you want to ignore
