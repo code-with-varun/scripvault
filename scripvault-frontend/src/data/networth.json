@@ -1,0 +1,22 @@
+
+
+
+
+
+
+
+[
+    { "month": "Jan", "value": 120000 },
+    { "month": "Feb", "value": 135000 },
+    { "month": "Mar", "value": 142000 },
+    { "month": "Apr", "value": 150000 },
+    { "month": "May", "value": 148000 },
+    { "month": "Jun", "value": 158000 },
+    { "month": "Jul", "value": 166000 },
+    { "month": "Aug", "value": 173000 },
+    { "month": "Sep", "value": 180000 },
+    { "month": "Oct", "value": 190000 },
+    { "month": "Nov", "value": 200000 },
+    { "month": "Dec", "value": 212000 }
+  ]
+  

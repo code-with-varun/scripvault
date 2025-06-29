@@ -1,0 +1,17 @@
+[
+  { "id": 201, "name": "HDFC Top 100 Fund", "type": "Mutual Fund", "marketValue": 78000, "investedValue": 65000 },
+  { "id": 202, "name": "TCS Ltd.", "type": "Stock", "marketValue": 3500, "investedValue": 3000 },
+  { "id": 203, "name": "SBI Focused Equity", "type": "Mutual Fund", "marketValue": 59000, "investedValue": 50000 },
+  { "id": 204, "name": "ICICI Tech Fund", "type": "Mutual Fund", "marketValue": 92000, "investedValue": 80000 },
+  { "id": 205, "name": "Wipro Ltd.", "type": "Stock", "marketValue": 4900, "investedValue": 4800 },
+  { "id": 206, "name": "Infosys Ltd.", "type": "Stock", "marketValue": 6200, "investedValue": 5700 },
+  { "id": 207, "name": "Axis Midcap Fund", "type": "Mutual Fund", "marketValue": 74000, "investedValue": 71000 },
+  { "id": 208, "name": "Tata Consumer Products", "type": "Stock", "marketValue": 6100, "investedValue": 6300 },
+  { "id": 209, "name": "Nippon Small Cap Fund", "type": "Mutual Fund", "marketValue": 45000, "investedValue": 40000 },
+  { "id": 210, "name": "LIC Housing Finance", "type": "Stock", "marketValue": 2500, "investedValue": 2400 },
+  { "id": 211, "name": "HDFC Flexicap", "type": "Mutual Fund", "marketValue": 33000, "investedValue": 30000 },
+  { "id": 212, "name": "ITC Ltd.", "type": "Stock", "marketValue": 3000, "investedValue": 2900 },
+  { "id": 213, "name": "Franklin India Bluechip", "type": "Mutual Fund", "marketValue": 38000, "investedValue": 35000 },
+  { "id": 214, "name": "Kotak Banking ETF", "type": "Mutual Fund", "marketValue": 21000, "investedValue": 20000 },
+  { "id": 215, "name": "Bajaj Finance", "type": "Stock", "marketValue": 14000, "investedValue": 12500 }
+]

@@ -1,0 +1,27 @@
+{
+    "netWorth": 2250000,
+    "investments": [
+      {
+        "id": 1,
+        "name": "HDFC Flexi Cap Fund",
+        "type": "Mutual Fund",
+        "amountInvested": 150000,
+        "currentValue": 176000
+      },
+      {
+        "id": 2,
+        "name": "Tata Digital India Fund",
+        "type": "Mutual Fund",
+        "amountInvested": 200000,
+        "currentValue": 243000
+      },
+      {
+        "id": 3,
+        "name": "Infosys Ltd.",
+        "type": "Stock",
+        "amountInvested": 50000,
+        "currentValue": 48000
+      }
+    ]
+  }
+  

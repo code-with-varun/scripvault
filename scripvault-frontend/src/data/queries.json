@@ -1,0 +1,18 @@
+[
+    { "id": 1, "category": "Long-Term Investment", "question": "Best mutual funds for retirement?", "date": "2025-06-01T10:00:00Z" },
+    { "id": 2, "category": "Short-Term Goals", "question": "Safe investments for 2-year goal?", "date": "2025-06-02T14:20:00Z" },
+    { "id": 3, "category": "Tax Saving Options", "question": "ELSS or PPF for tax saving?", "date": "2025-06-03T08:45:00Z" },
+    { "id": 4, "category": "Retirement Planning", "question": "How much to invest monthly for ₹1 crore at 60?", "date": "2025-06-03T15:10:00Z" },
+    { "id": 5, "category": "Short-Term Goals", "question": "Liquid fund vs Fixed Deposit?", "date": "2025-06-04T12:00:00Z" },
+    { "id": 6, "category": "Tax Saving Options", "question": "Section 80C limit utilization tips?", "date": "2025-06-05T09:30:00Z" },
+    { "id": 7, "category": "Long-Term Investment", "question": "Index funds vs actively managed funds?", "date": "2025-06-06T13:45:00Z" },
+    { "id": 8, "category": "Retirement Planning", "question": "NPS Tier 1 returns?", "date": "2025-06-07T11:25:00Z" },
+    { "id": 9, "category": "Tax Saving Options", "question": "Can I claim both NPS and ELSS under 80C?", "date": "2025-06-08T17:10:00Z" },
+    { "id": 10, "category": "Short-Term Goals", "question": "Goal: ₹5 lakh in 3 years. Best option?", "date": "2025-06-09T10:15:00Z" },
+    { "id": 11, "category": "Long-Term Investment", "question": "Best SIPs for 10 years?", "date": "2025-06-09T13:00:00Z" },
+    { "id": 12, "category": "Retirement Planning", "question": "How to calculate expected retirement corpus?", "date": "2025-06-10T09:40:00Z" },
+    { "id": 13, "category": "Tax Saving Options", "question": "Are NPS withdrawals taxable?", "date": "2025-06-11T16:20:00Z" },
+    { "id": 14, "category": "Short-Term Goals", "question": "Can I use mutual funds for emergency fund?", "date": "2025-06-12T07:50:00Z" },
+    { "id": 15, "category": "Long-Term Investment", "question": "Should I invest in gold ETFs or digital gold?", "date": "2025-06-12T19:30:00Z" }
+  ]
+  

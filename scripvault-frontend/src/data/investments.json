@@ -1,0 +1,17 @@
+[
+  { "id": 101, "name": "Axis Bluechip Fund", "type": "Mutual Fund", "frequency": "SIP", "amount": 5000 },
+  { "id": 102, "name": "Reliance Industries", "type": "Stock", "frequency": "One-Time", "amount": 10000 },
+  { "id": 103, "name": "Tata Digital Fund", "type": "Mutual Fund", "frequency": "SIP", "amount": 3000 },
+  { "id": 104, "name": "Infosys Ltd.", "type": "Stock", "frequency": "One-Time", "amount": 7000 },
+  { "id": 105, "name": "ICICI Value Discovery", "type": "Mutual Fund", "frequency": "SIP", "amount": 6000 },
+  { "id": 106, "name": "HDFC Balanced Advantage", "type": "Mutual Fund", "frequency": "SIP", "amount": 8000 },
+  { "id": 107, "name": "Kotak Flexicap Fund", "type": "Mutual Fund", "frequency": "SIP", "amount": 4000 },
+  { "id": 108, "name": "SBI Small Cap Fund", "type": "Mutual Fund", "frequency": "SIP", "amount": 2500 },
+  { "id": 109, "name": "Maruti Suzuki", "type": "Stock", "frequency": "One-Time", "amount": 9000 },
+  { "id": 110, "name": "Adani Enterprises", "type": "Stock", "frequency": "One-Time", "amount": 7500 },
+  { "id": 111, "name": "Nippon India Pharma Fund", "type": "Mutual Fund", "frequency": "SIP", "amount": 3500 },
+  { "id": 112, "name": "Tata Motors", "type": "Stock", "frequency": "One-Time", "amount": 6600 },
+  { "id": 113, "name": "ICICI Prudential Nifty Next 50", "type": "Mutual Fund", "frequency": "SIP", "amount": 5500 },
+  { "id": 114, "name": "L&T Emerging Businesses", "type": "Mutual Fund", "frequency": "SIP", "amount": 4300 },
+  { "id": 115, "name": "Dr. Reddy's Labs", "type": "Stock", "frequency": "One-Time", "amount": 8200 }
+]
