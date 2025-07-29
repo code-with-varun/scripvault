@@ -6,6 +6,7 @@ import Signup from './pages/Signup';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Investments from './pages/Investments';
+import Explore from './pages/Explore';
 import Watchlist from './pages/Watchlist';
 import Profile from './pages/Profile';
 import AskExperts from './pages/AskExperts';
@@ -26,6 +27,7 @@ const App = () => {
               <Route path="/Dashboard" element={<Dashboard />} />
               
               <Route path="/investments" element={<Investments />} />
+              <Route path="/explore" element={<Explore />} />
               <Route path="/watchlist" element={<Watchlist />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/ask" element={<AskExperts />} />

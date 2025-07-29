@@ -1,7 +1,24 @@
 {
+  "fullName": "Varun Akshay",
+  "email": "varun@gmail.com",
+  "phone": "9876543210",
+  "dateOfBirth": "1995-07-29",
+  "address": "123, Main Street, Pondicherry, India - 605001",
+  "riskTolerance": "moderate",
+  "preferredInvestments": {
+    "mutualFunds": true,
+    "stocks": true,
+    "fixedDeposits": false,
+    "etfs": true,
+    "nfos": false,
+    "nps": true
+  },
+  "twoFactorAuth": true,
+  "profileSummary": {
     "name": "Varun Akshay",
-    "email": "varun@gmail.com",
-    "phone": "9876543210",
-    "address": "Pondicherry, India"
+    "memberSince": "Jan 2024",
+    "totalInvestments": "₹22,50,000",
+    "activeGoals": "3",
+    "profilePic": "https://placehold.co/80x80/FF7F27/white?text=VA"
   }
-  
+}

@@ -1,27 +1,103 @@
 {
-    "netWorth": 2250000,
-    "investments": [
-      {
-        "id": 1,
-        "name": "HDFC Flexi Cap Fund",
-        "type": "Mutual Fund",
-        "amountInvested": 150000,
-        "currentValue": 176000
-      },
-      {
-        "id": 2,
-        "name": "Tata Digital India Fund",
-        "type": "Mutual Fund",
-        "amountInvested": 200000,
-        "currentValue": 243000
-      },
-      {
-        "id": 3,
-        "name": "Infosys Ltd.",
-        "type": "Stock",
-        "amountInvested": 50000,
-        "currentValue": 48000
-      }
-    ]
-  }
-  
+  "userName": "Varun",
+  "netWorth": 2250000,
+  "totalInvested": 1850000,
+  "totalGains": 400000,
+  "overallReturnPercent": 21.62,
+  "stocks": [
+    {
+      "id": 1,
+      "name": "Reliance Industries",
+      "shares": 25,
+      "currentValue": 62500,
+      "gainPercent": 5.0,
+      "logo": "https://placehold.co/30x30/dc3545/white?text=RIL"
+    },
+    {
+      "id": 2,
+      "name": "TCS Limited",
+      "shares": 30,
+      "currentValue": 105000,
+      "gainPercent": 8.0,
+      "logo": "https://placehold.co/30x30/20c997/white?text=TCS"
+    },
+    {
+      "id": 3,
+      "name": "HDFC Bank",
+      "shares": 40,
+      "currentValue": 68000,
+      "gainPercent": 3.5,
+      "logo": "https://placehold.co/30x30/FF7F27/white?text=HDFC"
+    },
+    {
+      "id": 4,
+      "name": "Infosys Ltd.",
+      "shares": 50,
+      "currentValue": 70000,
+      "gainPercent": -2.0,
+      "logo": "https://placehold.co/30x30/20c997/white?text=INFY"
+    }
+  ],
+  "mutualFunds": [
+    {
+      "id": 1,
+      "name": "SBI Bluechip Fund",
+      "sip": 5000,
+      "currentValue": 145000,
+      "gainPercent": 18.2,
+      "logo": "https://placehold.co/30x30/00bcd4/white?text=SBI"
+    },
+    {
+      "id": 2,
+      "name": "HDFC Mid Cap Opportunities Fund",
+      "sip": 3000,
+      "currentValue": 123000,
+      "gainPercent": 22.1,
+      "logo": "https://placehold.co/30x30/FF7F27/white?text=HDFC"
+    },
+    {
+      "id": 3,
+      "name": "Axis Small Cap Fund",
+      "sip": 2000,
+      "currentValue": 153000,
+      "gainPercent": 28.5,
+      "logo": "https://placehold.co/30x30/007bff/white?text=AXIS"
+    },
+    {
+      "id": 4,
+      "name": "Kotak Flexicap Fund",
+      "sip": 4000,
+      "currentValue": 85000,
+      "gainPercent": 15.0,
+      "logo": "https://placehold.co/30x30/6610f2/white?text=KOTAK"
+    }
+  ],
+  "marketSnapshot": {
+    "sensex": {
+      "value": 73428.90,
+      "change": 0.5
+    },
+    "nifty": {
+      "value": 22326.50,
+      "change": -0.2
+    }
+  },
+  "holdingsSummary": [
+    {
+      "type": "Mutual Funds",
+      "value": 425000
+    },
+    {
+      "type": "Stocks",
+      "value": 375000
+    },
+    {
+      "type": "ETFs",
+      "value": 35000
+    },
+    {
+      "type": "Fixed Deposits",
+      "value": 15000
+    }
+  ]
+}

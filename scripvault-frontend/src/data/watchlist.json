@@ -1,17 +1,137 @@
 [
-  { "id": 201, "name": "HDFC Top 100 Fund", "type": "Mutual Fund", "marketValue": 78000, "investedValue": 65000 },
-  { "id": 202, "name": "TCS Ltd.", "type": "Stock", "marketValue": 3500, "investedValue": 3000 },
-  { "id": 203, "name": "SBI Focused Equity", "type": "Mutual Fund", "marketValue": 59000, "investedValue": 50000 },
-  { "id": 204, "name": "ICICI Tech Fund", "type": "Mutual Fund", "marketValue": 92000, "investedValue": 80000 },
-  { "id": 205, "name": "Wipro Ltd.", "type": "Stock", "marketValue": 4900, "investedValue": 4800 },
-  { "id": 206, "name": "Infosys Ltd.", "type": "Stock", "marketValue": 6200, "investedValue": 5700 },
-  { "id": 207, "name": "Axis Midcap Fund", "type": "Mutual Fund", "marketValue": 74000, "investedValue": 71000 },
-  { "id": 208, "name": "Tata Consumer Products", "type": "Stock", "marketValue": 6100, "investedValue": 6300 },
-  { "id": 209, "name": "Nippon Small Cap Fund", "type": "Mutual Fund", "marketValue": 45000, "investedValue": 40000 },
-  { "id": 210, "name": "LIC Housing Finance", "type": "Stock", "marketValue": 2500, "investedValue": 2400 },
-  { "id": 211, "name": "HDFC Flexicap", "type": "Mutual Fund", "marketValue": 33000, "investedValue": 30000 },
-  { "id": 212, "name": "ITC Ltd.", "type": "Stock", "marketValue": 3000, "investedValue": 2900 },
-  { "id": 213, "name": "Franklin India Bluechip", "type": "Mutual Fund", "marketValue": 38000, "investedValue": 35000 },
-  { "id": 214, "name": "Kotak Banking ETF", "type": "Mutual Fund", "marketValue": 21000, "investedValue": 20000 },
-  { "id": 215, "name": "Bajaj Finance", "type": "Stock", "marketValue": 14000, "investedValue": 12500 }
+  {
+    "id": 201,
+    "name": "HDFC Top 100 Fund",
+    "type": "Mutual Fund",
+    "marketPrice": 78000,
+    "investedValue": 65000,
+    "changePercent": 5.23,
+    "trendData": [60, 65, 70, 75, 78]
+  },
+  {
+    "id": 202,
+    "name": "TCS Ltd.",
+    "type": "Stock",
+    "marketPrice": 3500,
+    "investedValue": 3000,
+    "changePercent": -1.50,
+    "trendData": [40, 45, 38, 35, 32]
+  },
+  {
+    "id": 203,
+    "name": "SBI Focused Equity",
+    "type": "Mutual Fund",
+    "marketPrice": 59000,
+    "investedValue": 50000,
+    "changePercent": 8.15,
+    "trendData": [50, 55, 62, 59, 65]
+  },
+  {
+    "id": 204,
+    "name": "ICICI Tech Fund",
+    "type": "Mutual Fund",
+    "marketPrice": 92000,
+    "investedValue": 80000,
+    "changePercent": 12.00,
+    "trendData": [70, 75, 80, 85, 92]
+  },
+  {
+    "id": 205,
+    "name": "Wipro Ltd.",
+    "type": "Stock",
+    "marketPrice": 4900,
+    "investedValue": 4800,
+    "changePercent": 2.08,
+    "trendData": [55, 50, 52, 49, 51]
+  },
+  {
+    "id": 206,
+    "name": "Infosys Ltd.",
+    "type": "Stock",
+    "marketPrice": 6200,
+    "investedValue": 5700,
+    "changePercent": 8.77,
+    "trendData": [45, 48, 55, 60, 62]
+  },
+  {
+    "id": 207,
+    "name": "Axis Midcap Fund",
+    "type": "Mutual Fund",
+    "marketPrice": 74000,
+    "investedValue": 71000,
+    "changePercent": 4.23,
+    "trendData": [65, 68, 70, 72, 74]
+  },
+  {
+    "id": 208,
+    "name": "Tata Consumer Products",
+    "type": "Stock",
+    "marketPrice": 6100,
+    "investedValue": 6300,
+    "changePercent": -3.17,
+    "trendData": [70, 68, 65, 63, 61]
+  },
+  {
+    "id": 209,
+    "name": "Nippon Small Cap Fund",
+    "type": "Mutual Fund",
+    "marketPrice": 45000,
+    "investedValue": 40000,
+    "changePercent": 12.50,
+    "trendData": [50, 55, 60, 65, 70]
+  },
+  {
+    "id": 210,
+    "name": "LIC Housing Finance",
+    "type": "Stock",
+    "marketPrice": 2500,
+    "investedValue": 2400,
+    "changePercent": 4.17,
+    "trendData": [40, 42, 45, 48, 50]
+  },
+  {
+    "id": 211,
+    "name": "HDFC Flexicap",
+    "type": "Mutual Fund",
+    "marketPrice": 33000,
+    "investedValue": 30000,
+    "changePercent": 10.00,
+    "trendData": [55, 58, 62, 65, 68]
+  },
+  {
+    "id": 212,
+    "name": "ITC Ltd.",
+    "type": "Stock",
+    "marketPrice": 3000,
+    "investedValue": 2900,
+    "changePercent": 3.45,
+    "trendData": [48, 50, 52, 55, 58]
+  },
+  {
+    "id": 213,
+    "name": "Franklin India Bluechip",
+    "type": "Mutual Fund",
+    "marketPrice": 38000,
+    "investedValue": 35000,
+    "changePercent": 8.57,
+    "trendData": [62, 65, 68, 70, 72]
+  },
+  {
+    "id": 214,
+    "name": "Kotak Banking ETF",
+    "type": "Mutual Fund",
+    "marketPrice": 21000,
+    "investedValue": 20000,
+    "changePercent": 5.00,
+    "trendData": [50, 52, 55, 58, 60]
+  },
+  {
+    "id": 215,
+    "name": "Bajaj Finance",
+    "type": "Stock",
+    "marketPrice": 14000,
+    "investedValue": 12500,
+    "changePercent": 12.00,
+    "trendData": [40, 45, 50, 55, 60]
+  }
 ]

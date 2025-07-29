@@ -1,17 +1,152 @@
 [
-  { "id": 101, "name": "Axis Bluechip Fund", "type": "Mutual Fund", "frequency": "SIP", "amount": 5000 },
-  { "id": 102, "name": "Reliance Industries", "type": "Stock", "frequency": "One-Time", "amount": 10000 },
-  { "id": 103, "name": "Tata Digital Fund", "type": "Mutual Fund", "frequency": "SIP", "amount": 3000 },
-  { "id": 104, "name": "Infosys Ltd.", "type": "Stock", "frequency": "One-Time", "amount": 7000 },
-  { "id": 105, "name": "ICICI Value Discovery", "type": "Mutual Fund", "frequency": "SIP", "amount": 6000 },
-  { "id": 106, "name": "HDFC Balanced Advantage", "type": "Mutual Fund", "frequency": "SIP", "amount": 8000 },
-  { "id": 107, "name": "Kotak Flexicap Fund", "type": "Mutual Fund", "frequency": "SIP", "amount": 4000 },
-  { "id": 108, "name": "SBI Small Cap Fund", "type": "Mutual Fund", "frequency": "SIP", "amount": 2500 },
-  { "id": 109, "name": "Maruti Suzuki", "type": "Stock", "frequency": "One-Time", "amount": 9000 },
-  { "id": 110, "name": "Adani Enterprises", "type": "Stock", "frequency": "One-Time", "amount": 7500 },
-  { "id": 111, "name": "Nippon India Pharma Fund", "type": "Mutual Fund", "frequency": "SIP", "amount": 3500 },
-  { "id": 112, "name": "Tata Motors", "type": "Stock", "frequency": "One-Time", "amount": 6600 },
-  { "id": 113, "name": "ICICI Prudential Nifty Next 50", "type": "Mutual Fund", "frequency": "SIP", "amount": 5500 },
-  { "id": 114, "name": "L&T Emerging Businesses", "type": "Mutual Fund", "frequency": "SIP", "amount": 4300 },
-  { "id": 115, "name": "Dr. Reddy's Labs", "type": "Stock", "frequency": "One-Time", "amount": 8200 }
+  {
+    "id": 101,
+    "name": "Axis Bluechip Fund",
+    "type": "Mutual Fund",
+    "frequency": "SIP",
+    "amount": 5000,
+    "investedValue": 60000,
+    "marketValue": 68500,
+    "logo": "https://placehold.co/40x40/007bff/white?text=AXIS"
+  },
+  {
+    "id": 102,
+    "name": "Reliance Industries Ltd.",
+    "type": "Stock",
+    "frequency": "One-Time",
+    "amount": 2500,
+    "investedValue": 25000,
+    "marketValue": 27500,
+    "logo": "https://placehold.co/40x40/dc3545/white?text=RIL"
+  },
+  {
+    "id": 103,
+    "name": "Tata Digital India Fund",
+    "type": "Mutual Fund",
+    "frequency": "SIP",
+    "amount": 3000,
+    "investedValue": 36000,
+    "marketValue": 41200,
+    "logo": "https://placehold.co/40x40/6f42c1/white?text=TATA"
+  },
+  {
+    "id": 104,
+    "name": "Infosys Ltd.",
+    "type": "Stock",
+    "frequency": "One-Time",
+    "amount": 1400,
+    "investedValue": 14000,
+    "marketValue": 13500,
+    "logo": "https://placehold.co/40x40/20c997/white?text=INFY"
+  },
+  {
+    "id": 105,
+    "name": "ICICI Value Discovery Fund",
+    "type": "Mutual Fund",
+    "frequency": "SIP",
+    "amount": 6000,
+    "investedValue": 72000,
+    "marketValue": 80100,
+    "logo": "https://placehold.co/40x40/fd7e14/white?text=ICICI"
+  },
+  {
+    "id": 106,
+    "name": "HDFC Balanced Advantage Fund",
+    "type": "Mutual Fund",
+    "frequency": "SIP",
+    "amount": 8000,
+    "investedValue": 96000,
+    "marketValue": 105600,
+    "logo": "https://placehold.co/40x40/FF7F27/white?text=HDFC"
+  },
+  {
+    "id": 107,
+    "name": "Kotak Flexicap Fund",
+    "type": "Mutual Fund",
+    "frequency": "SIP",
+    "amount": 4000,
+    "investedValue": 48000,
+    "marketValue": 53000,
+    "logo": "https://placehold.co/40x40/6610f2/white?text=KOTAK"
+  },
+  {
+    "id": 108,
+    "name": "SBI Small Cap Fund",
+    "type": "Mutual Fund",
+    "frequency": "SIP",
+    "amount": 2500,
+    "investedValue": 30000,
+    "marketValue": 28500,
+    "logo": "https://placehold.co/40x40/00bcd4/white?text=SBI"
+  },
+  {
+    "id": 109,
+    "name": "Maruti Suzuki India Ltd.",
+    "type": "Stock",
+    "frequency": "One-Time",
+    "amount": 9000,
+    "investedValue": 90000,
+    "marketValue": 95000,
+    "logo": "https://placehold.co/40x40/ffc107/white?text=MARUTI"
+  },
+  {
+    "id": 110,
+    "name": "Adani Enterprises Ltd.",
+    "type": "Stock",
+    "frequency": "One-Time",
+    "amount": 7500,
+    "investedValue": 75000,
+    "marketValue": 68000,
+    "logo": "https://placehold.co/40x40/6c757d/white?text=ADANI"
+  },
+  {
+    "id": 111,
+    "name": "Nippon India Pharma Fund",
+    "type": "Mutual Fund",
+    "frequency": "SIP",
+    "amount": 3500,
+    "investedValue": 42000,
+    "marketValue": 45000,
+    "logo": "https://placehold.co/40x40/17a2b8/white?text=NIPPN"
+  },
+  {
+    "id": 112,
+    "name": "Tata Motors Ltd.",
+    "type": "Stock",
+    "frequency": "One-Time",
+    "amount": 6600,
+    "investedValue": 66000,
+    "marketValue": 70000,
+    "logo": "https://placehold.co/40x40/e83e8c/white?text=TAMO"
+  },
+  {
+    "id": 113,
+    "name": "ICICI Prudential Nifty Next 50 Index Fund",
+    "type": "Mutual Fund",
+    "frequency": "SIP",
+    "amount": 5500,
+    "investedValue": 66000,
+    "marketValue": 71500,
+    "logo": "https://placehold.co/40x40/fd7e14/white?text=ICICI"
+  },
+  {
+    "id": 114,
+    "name": "L&T Emerging Businesses Fund",
+    "type": "Mutual Fund",
+    "frequency": "SIP",
+    "amount": 4300,
+    "investedValue": 51600,
+    "marketValue": 55000,
+    "logo": "https://placehold.co/40x40/6f42c1/white?text=L%26T"
+  },
+  {
+    "id": 115,
+    "name": "Dr. Reddy's Laboratories Ltd.",
+    "type": "Stock",
+    "frequency": "One-Time",
+    "amount": 8200,
+    "investedValue": 82000,
+    "marketValue": 80000,
+    "logo": "https://placehold.co/40x40/28a745/white?text=DRL"
+  }
 ]

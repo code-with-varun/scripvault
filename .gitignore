@@ -8,6 +8,7 @@ server/node_modules/
 
 # Environment variables
 .env
+scripvault-frontend/.env
 server/.env
 
 # Other files and directories you want to ignore

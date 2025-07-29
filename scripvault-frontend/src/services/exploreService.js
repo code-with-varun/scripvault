@@ -1,15 +1,15 @@
-// dashboardService.js
-// This service directly imports mock dashboard data for frontend development
+// exploreService.js
+// This service directly imports mock explore data for frontend development
 // when no backend is available.
 
-import dashboardData from '../data/dashboard.json'; // Assuming dashboard.json is in src/data
+import exploreData from '../data/explore.json'; // Assuming explore.json is in src/data
 
-export const getDashboardData = async () => {
+export const getExploreData = async () => {
   // Simulate an asynchronous operation (like a network call) without actually making one.
   // In a real MERN app, this would be a fetch to your Express.js backend.
   return new Promise(resolve => {
     setTimeout(() => {
-      resolve(dashboardData);
+      resolve(exploreData);
     }, 500); // Simulate a small delay
   });
 };
