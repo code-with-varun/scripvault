@@ -2,44 +2,88 @@
 const express = require('express');
 const router = express.Router();
 const Watchlist = require('../models/Watchlist');
-const User = require('../models/User');
 const Stock = require('../models/Stock');
+const { authenticateToken } = require('./auth'); // Import the authentication middleware
 
 // Get user's watchlist
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
-    // Assuming you have a user ID in the request object
-    const userId = req.user.id; // Adjust this based on your authentication setup
-    const watchlist = await Watchlist.findOne({ user: userId }).populate('stocks', 'symbol');
+    const userId = req.user.userId; // Get userId from the authenticated token payload
+
+    const watchlist = await Watchlist.findOne({ user: userId }).populate({
+      path: 'stocks',
+      // Select all fields that frontend needs for stock/mutual fund display
+      select: 'name type subType risk currentPrice dayChange oneYearReturn threeYearReturn fiveYearReturn logo trendData',
+    });
+
+    // If no watchlist exists for the user, return an empty array
+    if (!watchlist) {
+      return res.json({ user: userId, stocks: [] });
+    }
+
     res.json(watchlist);
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching user watchlist:", error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 
-// Add stock to user's watchlist
-router.post('/add', async (req, res) => {
+// Add stock/mutual fund to user's watchlist
+router.post('/add', authenticateToken, async (req, res) => {
   try {
-    const { symbol } = req.body;
-    const userId = req.user.id; // Adjust this based on your authentication setup
+    // Extract all relevant fields from the request body to create/find a Stock
+    const {
+      symbol,
+      name,
+      type,
+      subType,
+      risk,
+      marketPrice, // This is currentPrice in the Stock model
+      dayChange,
+      oneYearReturn,
+      threeYearReturn,
+      fiveYearReturn,
+      logo,
+      trendData
+    } = req.body;
 
-    // Check if the stock already exists in the Stock model
+    const userId = req.user.userId; // Get userId from the authenticated token payload
+
+    // Find the stock by symbol or create it if it doesn't exist in the master Stock collection
     let stock = await Stock.findOne({ symbol });
+
     if (!stock) {
-      stock = await Stock.create({ symbol });
+      // If stock doesn't exist, create a new one with all provided details
+      stock = await Stock.create({
+        symbol,
+        name,
+        type,
+        subType,
+        risk,
+        currentPrice: marketPrice, // Map frontend marketPrice to model currentPrice
+        dayChange,
+        oneYearReturn,
+        threeYearReturn,
+        fiveYearReturn,
+        logo,
+        trendData
+      });
     }
 
-    // Add the stock to the user's watchlist
+    // Add the stock's ID to the user's watchlist
+    // upsert: true will create the watchlist document if it doesn't exist for the user
     const watchlist = await Watchlist.findOneAndUpdate(
       { user: userId },
-      { $addToSet: { stocks: stock._id } },
-      { upsert: true, new: true }
-    ).populate('stocks', 'symbol');
+      { $addToSet: { stocks: stock._id } }, // Add stock ID to the array
+      { upsert: true, new: true } // Create if not exists, return the updated document
+    ).populate({
+      path: 'stocks',
+      select: 'name type subType risk currentPrice dayChange oneYearReturn threeYearReturn fiveYearReturn logo trendData', // Populate relevant fields
+    });
 
-    res.json(watchlist);
+    res.status(201).json(watchlist); // Return the updated watchlist with the new stock
   } catch (error) {
-    console.error(error);
+    console.error("Error adding stock to watchlist:", error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });

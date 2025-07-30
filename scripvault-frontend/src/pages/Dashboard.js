@@ -9,7 +9,15 @@ import { getNetWorthTrend } from '../services/networthService';
  * This component draws a basic line chart using SVG.
  * In a real application, you would use a dedicated charting library (e.g., Recharts, Chart.js).
  */
-const SimpleNetWorthChart = ({ data }) => {
+const SimpleNetWorthChart = ({ data, isLoading }) => {
+  if (isLoading) {
+    return (
+      <div style={styles.skeletonChartContainer}>
+        <div style={styles.skeletonChart}></div>
+      </div>
+    );
+  }
+
   if (!data || data.length === 0) {
     return <div style={{ textAlign: 'center', color: '#777', padding: '2rem' }}>No trend data available to display chart.</div>;
   }
@@ -29,6 +37,12 @@ const SimpleNetWorthChart = ({ data }) => {
   }).join(' ');
 
   const monthLabels = data.map(d => d.month);
+
+  // Helper for currency formatting within the chart
+  const formatCurrencyForChart = (value) => {
+    if (value === null || value === undefined) return '--';
+    return `₹${parseFloat(value).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+  };
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: 'auto' }}>
@@ -62,7 +76,7 @@ const SimpleNetWorthChart = ({ data }) => {
           fontSize="12"
           fill="#777"
         >
-          {val.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
+          {formatCurrencyForChart(val)}
         </text>
       ))}
 
@@ -152,18 +166,12 @@ const Dashboard = () => {
     fetchAllDashboardData();
   }, []); // Empty dependency array means this runs once on mount
 
-  // Display loading message
-  if (loading) {
-    return <p style={styles.loadingMessage}>Loading dashboard...</p>;
-  }
-
-  // Display error message if data fetching failed
-  if (error) {
-    return <p style={{ ...styles.loadingMessage, color: '#dc3545' }}>{error}</p>;
-  }
-
   // Helper functions for formatting
-  const formatCurrency = (value) => `₹${value.toLocaleString('en-IN')}`;
+  // Moved to top-level or outside component if reusable across components
+  const formatCurrency = (value) => {
+    if (value === null || value === undefined) return '₹ --';
+    return `₹${parseFloat(value).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  };
   const formatPercent = (value) => `${value.toFixed(2)}%`;
 
   return (
@@ -177,65 +185,103 @@ const Dashboard = () => {
 
         {/* Small Investment Type Cards */}
         <div style={styles.smallCardsGrid}>
-          <Link to="/fixed-deposits" style={styles.smallCard}>
-            <img src="https://placehold.co/40x40/FF7F27/white?text=FD" alt="Fixed Deposits" style={styles.smallCardIcon} />
-            Fixed Deposits
-          </Link>
-          <Link to="/nfos" style={styles.smallCard}>
-            <img src="https://placehold.co/40x40/FF7F27/white?text=NFO" alt="NFOs" style={styles.smallCardIcon} />
-            NFOs
-          </Link>
-          <Link to="/etfs" style={styles.smallCard}>
-            <img src="https://placehold.co/40x40/FF7F27/white?text=ETF" alt="ETFs" style={styles.smallCardIcon} />
-            ETFs
-          </Link>
-          <Link to="/nps" style={styles.smallCard}>
-            <img src="https://placehold.co/40x40/FF7F27/white?text=NPS" alt="NPS" style={styles.smallCardIcon} />
-            NPS
-          </Link>
+          {loading ? (
+            // Skeleton for small cards
+            [1, 2, 3, 4].map(i => (
+              <div key={i} style={styles.smallCardSkeleton}>
+                <div style={styles.skeletonCircleSmall}></div>
+                <div style={styles.skeletonTextSmall}></div>
+              </div>
+            ))
+          ) : (
+            <>
+              <Link to="/fixed-deposits" style={styles.smallCard}>
+                <img src="https://placehold.co/40x40/FF7F27/white?text=FD" alt="Fixed Deposits" style={styles.smallCardIcon} />
+                Fixed Deposits
+              </Link>
+              <Link to="/nfos" style={styles.smallCard}>
+                <img src="https://placehold.co/40x40/FF7F27/white?text=NFO" alt="NFOs" style={styles.smallCardIcon} />
+                NFOs
+              </Link>
+              <Link to="/etfs" style={styles.smallCard}>
+                <img src="https://placehold.co/40x40/FF7F27/white?text=ETF" alt="ETFs" style={styles.smallCardIcon} />
+                ETFs
+              </Link>
+              <Link to="/nps" style={styles.smallCard}>
+                <img src="https://placehold.co/40x40/FF7F27/white?text=NPS" alt="NPS" style={styles.smallCardIcon} />
+                NPS
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Market Snapshot */}
         <div style={styles.marketSnapshotCard}>
           <h3 style={styles.marketSnapshotTitle}>Market Snapshot</h3>
-          <div style={styles.marketIndicesGrid}>
-            <div style={styles.marketIndexItem}>
-              <span style={styles.marketIndexLabel}>SENSEX</span>
-              <span style={styles.marketIndexValue}>{formatCurrency(data.marketSnapshot.sensex.value)}</span>
-              <span style={{ ...styles.marketIndexChange, color: data.marketSnapshot.sensex.change >= 0 ? '#28a745' : '#dc3545' }}>
-                {data.marketSnapshot.sensex.change >= 0 ? '+' : ''}{formatPercent(data.marketSnapshot.sensex.change)}
-              </span>
+          {loading ? (
+            <div style={styles.marketIndicesGrid}>
+              <div style={styles.marketIndexItem}>
+                <div style={styles.skeletonTextMedium}></div>
+                <div style={styles.skeletonTextLarge}></div>
+                <div style={styles.skeletonTextSmall}></div>
+              </div>
+              <div style={styles.marketIndexItem}>
+                <div style={styles.skeletonTextMedium}></div>
+                <div style={styles.skeletonTextLarge}></div>
+                <div style={styles.skeletonTextSmall}></div>
+              </div>
             </div>
-            <div style={styles.marketIndexItem}>
-              <span style={styles.marketIndexLabel}>NIFTY</span>
-              <span style={styles.marketIndexValue}>{formatCurrency(data.marketSnapshot.nifty.value)}</span>
-              <span style={{ ...styles.marketIndexChange, color: data.marketSnapshot.nifty.change >= 0 ? '#28a745' : '#dc3545' }}>
-                {data.marketSnapshot.nifty.change >= 0 ? '+' : ''}{formatPercent(data.marketSnapshot.nifty.change)}
-              </span>
+          ) : (
+            <div style={styles.marketIndicesGrid}>
+              <div style={styles.marketIndexItem}>
+                <span style={styles.marketIndexLabel}>SENSEX</span>
+                <span style={styles.marketIndexValue}>{formatCurrency(data.marketSnapshot.sensex.value)}</span>
+                <span style={{ ...styles.marketIndexChange, color: data.marketSnapshot.sensex.change >= 0 ? '#28a745' : '#dc3545' }}>
+                  {data.marketSnapshot.sensex.change >= 0 ? '+' : ''}{formatPercent(data.marketSnapshot.sensex.change)}
+                </span>
+              </div>
+              <div style={styles.marketIndexItem}>
+                <span style={styles.marketIndexLabel}>NIFTY</span>
+                <span style={styles.marketIndexValue}>{formatCurrency(data.marketSnapshot.nifty.value)}</span>
+                <span style={{ ...styles.marketIndexChange, color: data.marketSnapshot.nifty.change >= 0 ? '#28a745' : '#dc3545' }}>
+                  {data.marketSnapshot.nifty.change >= 0 ? '+' : ''}{formatPercent(data.marketSnapshot.nifty.change)}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Your Portfolio Section */}
         <div style={styles.yourPortfolioSection}>
           <div style={styles.portfolioSectionHeader}>
             <h3 style={styles.portfolioSectionTitle}>Your Portfolio</h3>
-            <div style={styles.portfolioHeaderSummary}>
-              <div style={styles.portfolioHeaderSummaryItem}>
-                <span style={styles.portfolioHeaderSummaryLabel}>Total Net Worth</span>
-                <span style={styles.portfolioHeaderSummaryValue}>{formatCurrency(data.netWorth)}</span>
+            {loading ? (
+              <div style={styles.portfolioHeaderSummary}>
+                {[1, 2, 3].map(i => (
+                  <div key={i} style={styles.portfolioHeaderSummaryItem}>
+                    <div style={styles.skeletonTextSmallWhite}></div>
+                    <div style={styles.skeletonTextMediumWhite}></div>
+                  </div>
+                ))}
               </div>
-              <div style={styles.portfolioHeaderSummaryItem}>
-                <span style={styles.portfolioHeaderSummaryLabel}>Total Invested</span>
-                <span style={styles.portfolioHeaderSummaryValue}>{formatCurrency(data.totalInvested)}</span>
+            ) : (
+              <div style={styles.portfolioHeaderSummary}>
+                <div style={styles.portfolioHeaderSummaryItem}>
+                  <span style={styles.portfolioHeaderSummaryLabel}>Total Net Worth</span>
+                  <span style={styles.portfolioHeaderSummaryValue}>{formatCurrency(data.netWorth)}</span>
+                </div>
+                <div style={styles.portfolioHeaderSummaryItem}>
+                  <span style={styles.portfolioHeaderSummaryLabel}>Total Invested</span>
+                  <span style={styles.portfolioHeaderSummaryValue}>{formatCurrency(data.totalInvested)}</span>
+                </div>
+                <div style={styles.portfolioHeaderSummaryItem}>
+                  <span style={styles.portfolioHeaderSummaryLabel}>Total Gains</span>
+                  <span style={{ ...styles.portfolioHeaderSummaryValue, color: data.totalGains >= 0 ? '#fff' : '#ffdddd' }}>
+                    {data.totalGains >= 0 ? '+' : ''}{formatCurrency(data.totalGains)}
+                  </span>
+                </div>
               </div>
-              <div style={styles.portfolioHeaderSummaryItem}>
-                <span style={styles.portfolioHeaderSummaryLabel}>Total Gains</span>
-                <span style={{ ...styles.portfolioHeaderSummaryValue, color: data.totalGains >= 0 ? '#fff' : '#ffdddd' }}>
-                  {data.totalGains >= 0 ? '+' : ''}{formatCurrency(data.totalGains)}
-                </span>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Investment Growth Chart & Quick Invest/Holdings Grid */}
@@ -251,7 +297,7 @@ const Dashboard = () => {
                 </div>
               </div>
               <div style={styles.chartContainer}>
-                <SimpleNetWorthChart data={trend} />
+                <SimpleNetWorthChart data={trend} isLoading={loading} />
               </div>
             </div>
 
@@ -260,20 +306,40 @@ const Dashboard = () => {
               {/* Quick Invest */}
               <div style={styles.quickInvestCard}>
                 <h3 style={styles.quickInvestTitle}>Quick Invest</h3>
-                <button style={styles.quickInvestButton}>Invest in Mutual Funds</button>
-                <button style={styles.quickInvestButton}>Invest in Stocks</button>
+                {loading ? (
+                  <>
+                    <div style={styles.skeletonButton}></div>
+                    <div style={styles.skeletonButton}></div>
+                  </>
+                ) : (
+                  <>
+                    <button style={styles.quickInvestButton}>Invest in Mutual Funds</button>
+                    <button style={styles.quickInvestButton}>Invest in Stocks</button>
+                  </>
+                )}
               </div>
               {/* Holdings Summary */}
               <div style={styles.holdingsCard}>
                 <h3 style={styles.holdingsTitle}>Holdings</h3>
-                <div style={styles.holdingsList}>
-                  {data.holdingsSummary.map(holding => (
-                    <div key={holding.type} style={styles.holdingsItem}>
-                      <span style={styles.holdingsItemType}>{holding.type}</span>
-                      <span style={styles.holdingsItemValue}>{formatCurrency(holding.value)}</span>
-                    </div>
-                  ))}
-                </div>
+                {loading ? (
+                  <div style={styles.holdingsList}>
+                    {[1, 2, 3].map(i => (
+                      <div key={i} style={styles.holdingsItem}>
+                        <div style={styles.skeletonTextSmall}></div>
+                        <div style={styles.skeletonTextSmall}></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={styles.holdingsList}>
+                    {(data.holdingsSummary || []).map(holding => (
+                      <div key={holding.type} style={styles.holdingsItem}>
+                        <span style={styles.holdingsItemType}>{holding.type}</span>
+                        <span style={styles.holdingsItemValue}>{formatCurrency(holding.value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -287,31 +353,51 @@ const Dashboard = () => {
               <h3 style={styles.portfolioCardTitle}>Stocks Portfolio</h3>
               <span style={styles.portfolioCardIcon}>📈</span>
             </div>
-            <p style={styles.portfolioTotalValue}>{formatCurrency(data.stocks.reduce((sum, s) => sum + s.currentValue, 0))}</p>
-            <p style={{
-              ...styles.portfolioReturn,
-              // Calculate overall gain/loss for stocks based on current value vs. assumed initial value (shares * 100)
-              color: data.stocks.reduce((sum, s) => sum + (s.currentValue - (s.shares * 100)), 0) >= 0 ? '#28a745' : '#dc3545'
-            }}>
-              {data.stocks.reduce((sum, s) => sum + (s.currentValue - (s.shares * 100)), 0) >= 0 ? '+' : ''}
-              {formatPercent(data.stocks.reduce((sum, s) => sum + (s.currentValue - (s.shares * 100)), 0) / data.stocks.reduce((sum, s) => sum + (s.shares * 100), 0) * 100 || 0)} Overall
-            </p>
-            <div style={styles.portfolioItems}>
-              {data.stocks.map(stock => (
-                <div key={stock.id} style={styles.portfolioItem}>
-                  <img src={stock.logo} alt={stock.name} style={styles.portfolioItemLogo} />
-                  <div style={styles.portfolioItemDetails}>
-                    <span style={styles.portfolioItemName}>{stock.name}</span>
-                    <span style={styles.portfolioItemSubtext}>{stock.shares} shares</span>
-                  </div>
-                  <span style={styles.portfolioItemValue}>{formatCurrency(stock.currentValue)}</span>
-                  <span style={{ ...styles.portfolioItemGain, color: stock.gainPercent >= 0 ? '#28a745' : '#dc3545' }}>
-                    {stock.gainPercent >= 0 ? '+' : ''}{formatPercent(stock.gainPercent)}
-                  </span>
+            {loading ? (
+              <>
+                <div style={styles.skeletonTextLarge}></div>
+                <div style={styles.skeletonTextSmall}></div>
+                <div style={styles.portfolioItems}>
+                  {[1, 2].map(i => (
+                    <div key={i} style={styles.portfolioItem}>
+                      <div style={styles.skeletonCircleSmall}></div>
+                      <div style={styles.skeletonTextMedium}></div>
+                      <div style={styles.skeletonTextSmall}></div>
+                      <div style={styles.skeletonTextSmall}></div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <Link to="/investments" style={styles.viewAllButton}>View All Stocks</Link>
+                <div style={styles.skeletonButton}></div>
+              </>
+            ) : (
+              <>
+                <p style={styles.portfolioTotalValue}>{formatCurrency((data.stocks || []).reduce((sum, s) => sum + s.currentValue, 0))}</p>
+                <p style={{
+                  ...styles.portfolioReturn,
+                  // Calculate overall gain/loss for stocks based on current value vs. assumed initial value (shares * 100)
+                  color: (data.stocks || []).reduce((sum, s) => sum + (s.currentValue - (s.shares * 100)), 0) >= 0 ? '#28a745' : '#dc3545'
+                }}>
+                  {(data.stocks || []).reduce((sum, s) => sum + (s.currentValue - (s.shares * 100)), 0) >= 0 ? '+' : ''}
+                  {formatPercent(((data.stocks || []).reduce((sum, s) => sum + (s.currentValue - (s.shares * 100)), 0) / (data.stocks || []).reduce((sum, s) => sum + (s.shares * 100), 0)) * 100 || 0)} Overall
+                </p>
+                <div style={styles.portfolioItems}>
+                  {(data.stocks || []).map(stock => (
+                    <div key={stock.id} style={styles.portfolioItem}>
+                      <img src={stock.logo} alt={stock.name} style={styles.portfolioItemLogo} />
+                      <div style={styles.portfolioItemDetails}>
+                        <span style={styles.portfolioItemName}>{stock.name}</span>
+                        <span style={styles.portfolioItemSubtext}>{stock.shares} shares</span>
+                      </div>
+                      <span style={styles.portfolioItemValue}>{formatCurrency(stock.currentValue)}</span>
+                      <span style={{ ...styles.portfolioItemGain, color: stock.gainPercent >= 0 ? '#28a745' : '#dc3545' }}>
+                        {stock.gainPercent >= 0 ? '+' : ''}{formatPercent(stock.gainPercent)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <Link to="/investments" style={styles.viewAllButton}>View All Stocks</Link>
+              </>
+            )}
           </div>
 
           {/* Mutual Funds Portfolio Card */}
@@ -320,55 +406,87 @@ const Dashboard = () => {
               <h3 style={styles.portfolioCardTitle}>Mutual Funds</h3>
               <span style={styles.portfolioCardIcon}>📊</span>
             </div>
-            <p style={styles.portfolioTotalValue}>{formatCurrency(data.mutualFunds.reduce((sum, mf) => sum + mf.currentValue, 0))}</p>
-            <p style={{
-              ...styles.portfolioReturn,
-              // Calculate overall gain/loss for mutual funds based on current value vs. assumed initial value (sip * 10)
-              color: data.mutualFunds.reduce((sum, mf) => sum + (mf.currentValue - (mf.sip * 10)), 0) >= 0 ? '#28a745' : '#dc3545'
-            }}>
-              {data.mutualFunds.reduce((sum, mf) => sum + (mf.currentValue - (mf.sip * 10)), 0) / data.mutualFunds.reduce((sum, mf) => sum + (mf.sip * 10), 0) * 100 || 0 >= 0 ? '+' : ''}
-              {formatPercent(data.mutualFunds.reduce((sum, mf) => sum + (mf.currentValue - (mf.sip * 10)), 0) / data.mutualFunds.reduce((sum, mf) => sum + (mf.sip * 10), 0) * 100 || 0)} Overall
-            </p>
-            <div style={styles.portfolioItems}>
-              {data.mutualFunds.map(fund => (
-                <div key={fund.id} style={styles.portfolioItem}>
-                  <img src={fund.logo} alt={fund.name} style={styles.portfolioItemLogo} />
-                  <div style={styles.portfolioItemDetails}>
-                    <span style={styles.portfolioItemName}>{fund.name}</span>
-                    <span style={styles.portfolioItemSubtext}>Monthly SIP: {formatCurrency(fund.sip)}</span>
-                  </div>
-                  <span style={styles.portfolioItemValue}>{formatCurrency(fund.currentValue)}</span>
-                  <span style={{ ...styles.portfolioItemGain, color: fund.gainPercent >= 0 ? '#28a745' : '#dc3545' }}>
-                    {fund.gainPercent >= 0 ? '+' : ''}{formatPercent(fund.gainPercent)}
-                  </span>
+            {loading ? (
+              <>
+                <div style={styles.skeletonTextLarge}></div>
+                <div style={styles.skeletonTextSmall}></div>
+                <div style={styles.portfolioItems}>
+                  {[1, 2].map(i => (
+                    <div key={i} style={styles.portfolioItem}>
+                      <div style={styles.skeletonCircleSmall}></div>
+                      <div style={styles.skeletonTextMedium}></div>
+                      <div style={styles.skeletonTextSmall}></div>
+                      <div style={styles.skeletonTextSmall}></div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <Link to="/investments" style={styles.viewAllButton}>View All Funds</Link>
+                <div style={styles.skeletonButton}></div>
+              </>
+            ) : (
+              <>
+                <p style={styles.portfolioTotalValue}>{formatCurrency((data.mutualFunds || []).reduce((sum, mf) => sum + mf.currentValue, 0))}</p>
+                <p style={{
+                  ...styles.portfolioReturn,
+                  // Calculate overall gain/loss for mutual funds based on current value vs. assumed initial value (sip * 10)
+                  color: (data.mutualFunds || []).reduce((sum, mf) => sum + (mf.currentValue - (mf.sip * 10)), 0) >= 0 ? '#28a745' : '#dc3545'
+                }}>
+                  {(data.mutualFunds || []).reduce((sum, mf) => sum + (mf.currentValue - (mf.sip * 10)), 0) >= 0 ? '+' : ''}
+                  {formatPercent(((data.mutualFunds || []).reduce((sum, mf) => sum + (mf.currentValue - (mf.sip * 10)), 0) / ((data.mutualFunds || []).reduce((sum, mf) => sum + (mf.sip * 10), 0) || 1)) * 100)} Overall
+                </p>
+                <div style={styles.portfolioItems}>
+                  {(data.mutualFunds || []).map(fund => (
+                    <div key={fund.id} style={styles.portfolioItem}>
+                      <img src={fund.logo} alt={fund.name} style={styles.portfolioItemLogo} />
+                      <div style={styles.portfolioItemDetails}>
+                        <span style={styles.portfolioItemName}>{fund.name}</span>
+                        <span style={styles.portfolioItemSubtext}>Monthly SIP: {formatCurrency(fund.sip)}</span>
+                      </div>
+                      <span style={styles.portfolioItemValue}>{formatCurrency(fund.currentValue)}</span>
+                      <span style={{ ...styles.portfolioItemGain, color: fund.gainPercent >= 0 ? '#28a745' : '#dc3545' }}>
+                        {fund.gainPercent >= 0 ? '+' : ''}{formatPercent(fund.gainPercent)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <Link to="/investments" style={styles.viewAllButton}>View All Funds</Link>
+              </>
+            )}
           </div>
         </div>
 
         {/* Quick Action Buttons */}
         <div style={styles.quickActionsGrid}>
-          <button style={styles.actionButton}>
-            <span style={styles.actionIcon}>💰</span> Add Money
-          </button>
-          <button style={styles.actionButton}>
-            <span style={styles.actionIcon}>📋</span> Watchlist
-          </button>
-          <button style={styles.actionButton}>
-            <span style={styles.actionIcon}>🙋</span> Ask Expert
-          </button>
-          <button style={styles.actionButton}>
-            <span style={styles.actionIcon}>📄</span> Reports
-          </button>
+          {loading ? (
+            // Skeleton for quick action buttons
+            [1, 2, 3, 4].map(i => (
+              <div key={i} style={styles.skeletonActionButton}>
+                <div style={styles.skeletonCircle}></div>
+                <div style={styles.skeletonTextSmall}></div>
+              </div>
+            ))
+          ) : (
+            <>
+              <button style={styles.actionButton}>
+                <span style={styles.actionIcon}>💰</span> Add Money
+              </button>
+              <button style={styles.actionButton}>
+                <span style={styles.actionIcon}>📋</span> Watchlist
+              </button>
+              <button style={styles.actionButton}>
+                <span style={styles.actionIcon}>🙋</span> Ask Expert
+              </button>
+              <button style={styles.actionButton}>
+                <span style={styles.actionIcon}>📄</span> Reports
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-// Styles object for inline CSS (kept as is, as requested)
+// Styles object for inline CSS
 const styles = {
   pageContainer: {
     minHeight: '100vh',
@@ -388,6 +506,13 @@ const styles = {
     color: '#777',
     padding: '5rem',
   },
+  errorMessage: {
+    color: '#dc3545',
+    textAlign: 'center',
+    marginBottom: '1rem',
+    fontSize: '1rem',
+    fontWeight: '500',
+  },
 
   // Welcome Section Styles
   welcomeSection: {
@@ -404,6 +529,7 @@ const styles = {
   welcomeSubtitle: {
     fontSize: '1rem',
     color: '#666',
+    marginBottom: '2rem',
   },
 
   // Small Investment Type Cards Grid (from Dashboard.jpg)
@@ -486,9 +612,6 @@ const styles = {
     fontWeight: '500',
   },
 
-  // Net Worth Card Styles (from Dashboard2.png) - This one is removed as it was redundant
-  // The summary figures are now only in the orange 'yourPortfolioSection'
-
   // Your Portfolio Section (colorful gradient background)
   yourPortfolioSection: {
     background: 'linear-gradient(to right, #FF7F27, #FF9933)',
@@ -550,6 +673,12 @@ const styles = {
     marginBottom: '1.5rem',
     flexWrap: 'wrap',
     gap: '1rem',
+  },
+  portfolioGrowthTitle: { // Added style for portfolio growth title
+    fontSize: '1.4rem',
+    fontWeight: '600',
+    color: '#333',
+    margin: 0,
   },
   chartTimeFilters: {
     display: 'flex',
@@ -794,6 +923,117 @@ const styles = {
   actionIcon: {
     fontSize: '2rem',
     color: '#FF7F27',
+  },
+
+  // Skeleton Loader Styles
+  '@keyframes pulse': {
+    '0%': { backgroundColor: '#e0e0e0' },
+    '50%': { backgroundColor: '#f0f0f0' },
+    '100%': { backgroundColor: '#e0e0e0' },
+  },
+  skeletonTextLarge: {
+    width: '80%',
+    height: '28px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginBottom: '10px',
+  },
+  skeletonTextMedium: {
+    width: '70%',
+    height: '20px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginBottom: '8px',
+  },
+  skeletonTextSmall: {
+    width: '50%',
+    height: '16px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonCircle: {
+    width: '40px',
+    height: '40px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '50%',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonCircleSmall: { // Smaller circle for small cards
+    width: '30px',
+    height: '30px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '50%',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginBottom: '0.5rem',
+  },
+  skeletonChartContainer: {
+    width: '100%',
+    height: '350px', // Match chart container height
+    backgroundColor: '#e0e0e0',
+    borderRadius: '10px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  skeletonChart: {
+    width: '90%',
+    height: '80%',
+    backgroundColor: '#d0d0d0',
+    borderRadius: '8px',
+  },
+  skeletonButton: {
+    width: '80%',
+    height: '45px', // Match button height
+    backgroundColor: '#e0e0e0',
+    borderRadius: '8px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginBottom: '1rem',
+  },
+  smallCardSkeleton: {
+    backgroundColor: '#fff',
+    borderRadius: '10px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    padding: '1rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.5rem',
+    minHeight: '80px', // Ensure skeleton has some height
+  },
+  skeletonActionButton: {
+    padding: '1.5rem',
+    backgroundColor: '#fff',
+    borderRadius: '15px',
+    boxShadow: '0 5px 15px rgba(0,0,0,0.05)',
+    border: 'none',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.8rem',
+    minHeight: '120px', // Match action button height
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonTextSmallWhite: { // For text on orange background
+    width: '60%',
+    height: '16px',
+    backgroundColor: 'rgba(255,255,255,0.3)', // Semi-transparent white
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginBottom: '5px',
+  },
+  skeletonTextMediumWhite: { // For text on orange background
+    width: '80%',
+    height: '20px',
+    backgroundColor: 'rgba(255,255,255,0.4)', // Semi-transparent white
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
   },
 };
 

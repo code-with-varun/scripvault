@@ -1,54 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Import useEffect
 import { Link, useNavigate } from 'react-router-dom';
-// Your original AuthContext import - kept untouched
 import { useAuth } from '../context/AuthContext';
 
 const Signup = () => {
-  // Your original context usage and navigation - kept untouched
-  const { login } = useAuth(); // simulate login after signup
+  const { register, authMessage } = useAuth(); // Get register function and authMessage
   const navigate = useNavigate();
 
-  // Your original state for form fields - enhanced with new fields
   const [form, setForm] = useState({
-    fullName: '', // Corresponds to 'Full Name' in UI
+    fullName: '',
     email: '',
-    phoneNumber: '', // New field from UI
+    phoneNumber: '',
     password: '',
-    confirmPassword: '', // New field from UI
-    referralCode: '' // New field from UI
+    confirmPassword: '',
+    referralCode: ''
   });
-  const [error, setError] = useState('');
-  const [agreedToTerms, setAgreedToTerms] = useState(false); // New state for checkbox
+  const [localError, setLocalError] = useState(''); // For local validation errors
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
-  // Your original handleChange logic - kept untouched
+  // Clear local error when form fields change
+  useEffect(() => {
+    setLocalError('');
+  }, [form, agreedToTerms]);
+
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Your original handleSubmit logic - enhanced for new fields and validation
-  const handleSubmit = e => {
+  const handleSubmit = async e => { // Made async to await register
     e.preventDefault();
 
     // Enhanced validation based on UI fields
     if (!form.fullName || !form.email || !form.password || !form.confirmPassword) {
-      setError('Full Name, Email, Password, and Confirm Password are required.');
+      setLocalError('Full Name, Email, Password, and Confirm Password are required.');
       return;
     }
     if (form.password !== form.confirmPassword) {
-      setError('Passwords do not match.');
+      setLocalError('Passwords do not match.');
+      return;
+    }
+    if (form.password.length < 6) { // Basic password length validation
+      setLocalError('Password must be at least 6 characters long.');
       return;
     }
     if (!agreedToTerms) {
-        setError('You must agree to the Terms of Service and Privacy Policy.');
+        setLocalError('You must agree to the Terms of Service and Privacy Policy.');
         return;
     }
 
-    setError(''); // Clear previous errors
+    setLocalError(''); // Clear previous local errors
 
-    // Simulate success and login/navigate - kept untouched
-    console.log('Attempting signup with:', form);
-    login(form.email, form.password); // Simulate login after signup
-    navigate('/login'); // Navigate to login page
+    // Prepare data for backend (only send fields that backend expects for registration)
+    const registrationData = {
+      fullName: form.fullName,
+      email: form.email,
+      password: form.password,
+      phone: form.phoneNumber, // Map frontend phoneNumber to backend phone
+      // referralCode is not in backend User model, so don't send it unless added
+    };
+
+    // Call the register function from AuthContext
+    await register(registrationData);
+    // Navigation to login page is handled by AuthContext after successful registration
   };
 
   return (
@@ -185,8 +197,12 @@ const Signup = () => {
               </label>
             </div>
 
-            {/* Error Message Display */}
-            {error && <p style={styles.error}>{error}</p>}
+            {/* Error Message Display - Use localError first, then authMessage */}
+            {(localError || authMessage) && (
+              <p style={{ ...styles.error, color: authMessage.includes('successful') ? 'green' : 'red' }}>
+                {localError || authMessage}
+              </p>
+            )}
 
             {/* Create Account Button */}
             <button type="submit" style={styles.createAccountButton}>Create Account</button>
@@ -209,20 +225,20 @@ const Signup = () => {
 
           <h2 style={styles.promoHeading}>Welcome to ScripVault</h2>
           <p style={styles.promoSubText}>Join thousands of investors who trust ScripVault for their mutual fund and stock investments. Start building your wealth with our expert-guided platform.</p>
-          
+
           {/* Features List */}
           <div style={styles.promoFeaturesList}>
             <div style={styles.featureItem}>
               <span style={styles.featureCheck}>✅</span> Secure Platform
             </div>
             <div style={styles.featureItem}>
-              <span style={styles.featureCheck}>✅</span> Zero Commission Trading
+              <span style={styles.featureItem}>✅</span> Zero Commission Trading
             </div>
             <div style={styles.featureItem}>
-              <span style={styles.featureCheck}>✅</span> Expert Investment Advice
+              <span style={styles.featureItem}>✅</span> Expert Investment Advice
             </div>
             <div style={styles.featureItem}>
-              <span style={styles.featureCheck}>✅</span> Real-time Market Data
+              <span style={styles.featureItem}>✅</span> Real-time Market Data
             </div>
           </div>
         </div>
@@ -327,7 +343,7 @@ const styles = {
     padding: '0.3rem 0', // Adjusted padding
     border: 'none', // Remove individual input border
     fontSize: '1rem',
-    boxSizing: 'border-box',
+    boxSizing: 'border-box', // Include padding in width
     outline: 'none', // Remove outline on focus
   },
   optionalText: {

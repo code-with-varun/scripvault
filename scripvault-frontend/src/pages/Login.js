@@ -1,26 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Import useEffect
 import { Link } from 'react-router-dom';
-// Your original AuthContext import - kept untouched
-import { useAuth } from '../context/AuthContext'; 
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
-  // Your original state and context usage - kept untouched
-  const { login } = useAuth();
+  const { login, authMessage, isAuthenticated } = useAuth(); // Get authMessage and isAuthenticated
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [localError, setLocalError] = useState(''); // Use local error for input validation
 
-  // Your original handleSubmit logic - kept untouched
-  const handleSubmit = (e) => {
+  // Clear local error when email/password changes
+  useEffect(() => {
+    setLocalError('');
+  }, [email, password]);
+
+  // Handle form submission
+  const handleSubmit = async (e) => { // Made async to await login
     e.preventDefault();
 
     if (!email || !password) {
-      setError("Please enter both email and password");
+      setLocalError("Please enter both email and password");
       return;
     }
 
-    setError('');
-    login(email, password); // Uses your existing context logic
+    setLocalError(''); // Clear previous local errors
+    await login(email, password); // Call the async login function from AuthContext
   };
 
   return (
@@ -30,7 +33,6 @@ const Login = () => {
         <div style={styles.loginFormContainer}>
           {/* Logo and Tagline - UI Enhancement */}
           <div style={styles.logoContainer}>
-            {/* Replace with your actual logo SVG/PNG if different */}
             <img src="https://assets-global.website-files.com/63f734fb25b6c647a0c249c1/64016a4b162f4b01e74a8968_logo.svg" alt="ScripVault Logo" style={styles.logoImg} />
             <h1 style={styles.logoText}>ScripVault</h1>
           </div>
@@ -75,8 +77,12 @@ const Login = () => {
               <Link to="/forgot-password" style={styles.forgotPassword}>Forgot Password?</Link>
             </div>
 
-            {/* Error Message Display - Original Logic */}
-            {error && <p style={styles.error}>{error}</p>}
+            {/* Error Message Display - Use localError first, then authMessage */}
+            {(localError || authMessage) && (
+              <p style={{ ...styles.error, color: authMessage.includes('successful') ? 'green' : 'red' }}>
+                {localError || authMessage}
+              </p>
+            )}
 
             {/* Sign In Button - UI Enhancement */}
             <button type="submit" style={styles.signInButton}>Sign In</button>

@@ -10,8 +10,14 @@ const Watchlist = () => {
   const [error, setError] = useState(null); // Add error state
 
   // Helper function for currency formatting
-  const formatCurrency = (value) => `₹${parseFloat(value).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-  const formatPercentage = (value) => `${parseFloat(value).toFixed(2)}%`;
+  const formatCurrency = (value) => {
+    if (value === null || value === undefined) return '₹ --';
+    return `₹${parseFloat(value).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  };
+  const formatPercentage = (value) => {
+    if (value === null || value === undefined) return '--%';
+    return `${parseFloat(value).toFixed(2)}%`;
+  };
 
 
   // Fetch watchlist data on component mount
@@ -117,14 +123,6 @@ const Watchlist = () => {
     );
   };
 
-  if (loading) {
-    return <p style={styles.loadingMessage}>Loading watchlist...</p>;
-  }
-
-  if (error) {
-    return <p style={{ ...styles.loadingMessage, color: '#dc3545' }}>{error}</p>;
-  }
-
   return (
     <div style={styles.pageContainer}>
       <div style={styles.contentWrapper}>
@@ -133,23 +131,62 @@ const Watchlist = () => {
           <p style={styles.watchlistSubtitle}>Track your favorite stocks and mutual funds</p>
         </div>
 
+        {error && <p style={styles.errorMessage}>{error}</p>}
+
         {/* Search/Add Bar */}
         <div style={styles.searchBarContainer}>
-          <input
-            type="text"
-            placeholder="Search stocks, mutual funds..."
-            value={searchTerm}
-            onChange={handleSearchInputChange}
-            onKeyPress={(e) => { if (e.key === 'Enter') handleAddOrSearch(e); }} // Allow adding on Enter
-            style={styles.searchInput}
-          />
-          <button onClick={handleAddOrSearch} style={styles.addIcon}>+</button>
+          {loading ? (
+            <>
+              <div style={styles.skeletonInputFull}></div>
+              <div style={styles.skeletonAddButton}></div>
+            </>
+          ) : (
+            <>
+              <input
+                type="text"
+                placeholder="Search stocks, mutual funds..."
+                value={searchTerm}
+                onChange={handleSearchInputChange}
+                onKeyPress={(e) => { if (e.key === 'Enter') handleAddOrSearch(e); }} // Allow adding on Enter
+                style={styles.searchInput}
+              />
+              <button onClick={handleAddOrSearch} style={styles.addIcon}>+</button>
+            </>
+          )}
         </div>
         {message && <p style={styles.message}>{message}</p>}
 
         {/* Watchlist Items */}
         <div style={styles.watchlistGrid}>
-          {watchlist.length === 0 ? (
+          {loading ? (
+            // Skeleton loader for watchlist items
+            [1, 2, 3].map(i => (
+              <div key={i} style={styles.skeletonWatchlistItemCard}>
+                <div style={styles.skeletonItemHeader}>
+                  <div style={styles.skeletonTextMedium}></div>
+                  <div style={styles.skeletonRemoveButton}></div>
+                </div>
+                <div style={styles.skeletonTextSmall}></div> {/* For item type */}
+                <div style={styles.skeletonItemDetailsGrid}>
+                  <div style={styles.skeletonDetailColumn}>
+                    <div style={styles.skeletonTextSmall}></div>
+                    <div style={styles.skeletonTextMedium}></div>
+                  </div>
+                  <div style={styles.skeletonDetailColumn}>
+                    <div style={styles.skeletonTextSmall}></div>
+                    <div style={styles.skeletonTextMedium}></div>
+                  </div>
+                  <div style={styles.skeletonDetailColumn}>
+                    <div style={styles.skeletonTextSmall}></div>
+                    <div style={styles.skeletonTextMedium}></div>
+                  </div>
+                  <div style={styles.skeletonDetailColumn}>
+                    <div style={styles.skeletonChartSmall}></div> {/* For trend line */}
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : watchlist.length === 0 ? (
             <p style={styles.noItemsMessage}>Your watchlist is empty. Add some items!</p>
           ) : (
             watchlist.map(item => {
@@ -166,7 +203,7 @@ const Watchlist = () => {
                     </button>
                   </div>
                   <p style={styles.itemType}>{item.type}</p>
-                  
+
                   <div style={styles.itemDetailsGrid}>
                     <div style={styles.detailColumn}>
                       <span style={styles.detailLabel}>Market Price</span>
@@ -225,7 +262,13 @@ const styles = {
     fontSize: '1rem',
     color: '#666',
   },
-
+  errorMessage: {
+    color: '#dc3545',
+    textAlign: 'center',
+    marginBottom: '1rem',
+    fontSize: '1rem',
+    fontWeight: '500',
+  },
   // Search/Add Bar Styles
   searchBarContainer: {
     display: 'flex',
@@ -344,6 +387,101 @@ const styles = {
     fontSize: '1.1rem',
     color: '#777',
     marginTop: '3rem',
+  },
+
+  // Skeleton Loader Styles (new and reused)
+  '@keyframes pulse': {
+    '0%': { backgroundColor: '#e0e0e0' },
+    '50%': { backgroundColor: '#f0f0f0' },
+    '100%': { backgroundColor: '#e0e0e0' },
+  },
+  skeletonTextLarge: {
+    width: '80%',
+    height: '28px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginBottom: '10px',
+  },
+  skeletonTextMedium: {
+    width: '70%',
+    height: '20px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginBottom: '8px',
+  },
+  skeletonTextSmall: {
+    width: '50%',
+    height: '16px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonInputFull: {
+    flex: 1,
+    border: 'none',
+    outline: 'none',
+    height: '40px', // Match input height
+    backgroundColor: '#e0e0e0',
+    borderRadius: '8px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginRight: '1rem',
+  },
+  skeletonAddButton: {
+    backgroundColor: '#e0e0e0',
+    borderRadius: '50%',
+    width: '30px',
+    height: '30px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonWatchlistItemCard: {
+    backgroundColor: '#fff',
+    borderRadius: '10px',
+    boxShadow: '0 5px 15px rgba(0,0,0,0.05)',
+    padding: '1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    minHeight: '150px', // Ensure skeleton has some height
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonItemHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '0.5rem',
+  },
+  skeletonRemoveButton: {
+    backgroundColor: '#e0e0e0',
+    borderRadius: '50%',
+    width: '24px',
+    height: '24px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonItemDetailsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: '1rem',
+    alignItems: 'center',
+    '@media (max-width: 768px)': {
+      gridTemplateColumns: '1fr 1fr',
+    },
+    '@media (max-width: 480px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
+  skeletonDetailColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '5px',
+  },
+  skeletonChartSmall: {
+    width: '80px',
+    height: '40px',
+    backgroundColor: '#d0d0d0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
   },
 };
 

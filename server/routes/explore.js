@@ -2,23 +2,24 @@
 const express = require('express');
 const router = express.Router();
 const Stock = require('../models/Stock');
+const { authenticateToken } = require('./auth'); // Import the authentication middleware
 
-// Search and add stocks/scrips
-router.post('/add', async (req, res) => {
+// Get all available stocks/scrips for exploration
+router.get('/', authenticateToken, async (req, res) => {
   try {
-    const { symbol } = req.body;
+    // Fetch all stocks from the database
+    // You might want to add pagination, filtering, or sorting options here later
+    const stocks = await Stock.find({}); // Find all documents in the Stock collection
 
-    // Check if the stock already exists in the Stock model
-    let stock = await Stock.findOne({ symbol });
-    if (!stock) {
-      stock = await Stock.create({ symbol });
-    }
-
-    res.json(stock);
+    res.json(stocks);
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching stocks for exploration:", error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
+// Removed the POST /add route as its functionality is better suited
+// for administrative tasks or is already covered by watchlist/portfolio routes.
+// If you need to add new global stock entries, consider a dedicated admin API.
 
 module.exports = router;

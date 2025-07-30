@@ -162,14 +162,6 @@ const Profile = () => {
     setTimeout(() => setMessage(''), 2000);
   };
 
-  if (loading) {
-    return <p style={styles.loadingMessage}>Loading profile...</p>;
-  }
-
-  if (error) {
-    return <p style={{ ...styles.loadingMessage, color: '#dc3545' }}>{error}</p>;
-  }
-
   return (
     <div style={styles.pageContainer}>
       <div style={styles.contentWrapper}>
@@ -178,278 +170,368 @@ const Profile = () => {
           <p style={styles.profileSubtitle}>Manage your account information and preferences</p>
         </div>
 
+        {error && <p style={styles.errorMessage}>{error}</p>}
+
         <div style={styles.mainContentGrid}>
           {/* Left Column: Form Sections */}
           <form onSubmit={handleSave} style={styles.formSectionsContainer}> {/* Wrap in form tag */}
-            {/* Personal Information Section */}
-            <div style={styles.sectionCard}>
-              <h3 style={styles.sectionHeading}>
-                <span style={styles.sectionIcon}>👤</span> Personal Information
-              </h3>
-              <div style={styles.gridTwoColumns}>
-                {/* Full Name */}
-                <div style={styles.inputGroup}>
-                  <label htmlFor="fullName" style={styles.label}>Full Name</label>
-                  <input
-                    name="fullName"
-                    id="fullName"
-                    value={form.fullName}
-                    onChange={handleChange}
-                    style={styles.input}
-                  />
+            {loading ? (
+              <>
+                {/* Skeleton for Personal Information Section */}
+                <div style={styles.skeletonSectionCard}>
+                  <div style={styles.skeletonSectionHeading}>
+                    <div style={styles.skeletonSectionIcon}></div>
+                    <div style={styles.skeletonTextMedium}></div>
+                  </div>
+                  <div style={styles.skeletonGridTwoColumns}>
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} style={styles.skeletonInputGroup}>
+                        <div style={styles.skeletonTextSmall}></div>
+                        <div style={styles.skeletonInput}></div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={styles.skeletonInputGroup}>
+                    <div style={styles.skeletonTextSmall}></div>
+                    <div style={styles.skeletonTextarea}></div>
+                  </div>
                 </div>
-                {/* Email Address */}
-                <div style={styles.inputGroup}>
-                  <label htmlFor="email" style={styles.label}>Email Address</label>
-                  <input
-                    name="email"
-                    id="email"
-                    type="email"
-                    value={form.email}
-                    disabled // As per original code, email is disabled
-                    style={styles.inputDisabled}
-                  />
-                </div>
-                {/* Phone Number */}
-                <div style={styles.inputGroup}>
-                  <label htmlFor="phone" style={styles.label}>Phone Number</label>
-                  <input
-                    name="phone"
-                    id="phone"
-                    type="tel"
-                    value={form.phone}
-                    onChange={handleChange}
-                    style={styles.input}
-                  />
-                </div>
-                {/* Date of Birth (Simulated) */}
-                <div style={styles.inputGroup}>
-                  <label htmlFor="dateOfBirth" style={styles.label}>Date of Birth</label>
-                  <input
-                    name="dateOfBirth"
-                    id="dateOfBirth"
-                    type="date" // Use type="date" for date picker
-                    value={form.dateOfBirth}
-                    onChange={handleChange}
-                    style={styles.input}
-                  />
-                </div>
-              </div>
-              {/* Address */}
-              <div style={styles.inputGroup}>
-                <label htmlFor="address" style={styles.label}>Address</label>
-                <textarea
-                  name="address"
-                  id="address"
-                  value={form.address}
-                  onChange={handleChange}
-                  style={styles.textarea}
-                ></textarea>
-              </div>
-            </div>
 
-            {/* Investment Preferences Section */}
-            <div style={styles.sectionCard}>
-              <h3 style={styles.sectionHeading}>
-                <span style={styles.sectionIcon}>📈</span> Investment Preferences
-              </h3>
-              {/* Risk Tolerance Radio Buttons */}
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Risk Tolerance</label>
-                <div style={styles.radioGroup}>
-                  <label style={styles.radioLabel}>
-                    <input
-                      type="radio"
-                      name="riskTolerance"
-                      value="conservative"
-                      checked={form.riskTolerance === 'conservative'}
-                      onChange={handleChange}
-                      style={styles.radioInput}
-                    />
-                    Conservative
-                  </label>
-                  <label style={styles.radioLabel}>
-                    <input
-                      type="radio"
-                      name="riskTolerance"
-                      value="moderate"
-                      checked={form.riskTolerance === 'moderate'}
-                      onChange={handleChange}
-                      style={styles.radioInput}
-                    />
-                    Moderate
-                  </label>
-                  <label style={styles.radioLabel}>
-                    <input
-                      type="radio"
-                      name="riskTolerance"
-                      value="aggressive"
-                      checked={form.riskTolerance === 'aggressive'}
-                      onChange={handleChange}
-                      style={styles.radioInput}
-                    />
-                    Aggressive
-                  </label>
+                {/* Skeleton for Investment Preferences Section */}
+                <div style={styles.skeletonSectionCard}>
+                  <div style={styles.skeletonSectionHeading}>
+                    <div style={styles.skeletonSectionIcon}></div>
+                    <div style={styles.skeletonTextMedium}></div>
+                  </div>
+                  <div style={styles.skeletonInputGroup}>
+                    <div style={styles.skeletonTextSmall}></div>
+                    <div style={styles.skeletonRadioGroup}>
+                      {[1, 2, 3].map(i => <div key={i} style={styles.skeletonRadioLabel}></div>)}
+                    </div>
+                  </div>
+                  <div style={styles.skeletonInputGroup}>
+                    <div style={styles.skeletonTextSmall}></div>
+                    <div style={styles.skeletonCheckboxGroup}>
+                      {[1, 2, 3, 4, 5, 6].map(i => <div key={i} style={styles.skeletonCheckboxLabel}></div>)}
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Preferred Investment Categories Checkboxes */}
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Preferred Investment Categories</label>
-                <div style={styles.checkboxGroup}>
-                  <label style={styles.checkboxLabelInline}>
-                    <input
-                      type="checkbox"
-                      name="preferredInvestments.mutualFunds"
-                      checked={form.preferredInvestments.mutualFunds}
-                      onChange={handleChange}
-                      style={styles.checkboxInput}
-                    />
-                    Mutual Funds
-                  </label>
-                  <label style={styles.checkboxLabelInline}>
-                    <input
-                      type="checkbox"
-                      name="preferredInvestments.stocks"
-                      checked={form.preferredInvestments.stocks}
-                      onChange={handleChange}
-                      style={styles.checkboxInput}
-                    />
-                    Stocks
-                  </label>
-                  <label style={styles.checkboxLabelInline}>
-                    <input
-                      type="checkbox"
-                      name="preferredInvestments.etfs"
-                      checked={form.preferredInvestments.etfs}
-                      onChange={handleChange}
-                      style={styles.checkboxInput}
-                    />
-                    ETFs
-                  </label>
-                  <label style={styles.checkboxLabelInline}>
-                    <input
-                      type="checkbox"
-                      name="preferredInvestments.fixedDeposits"
-                      checked={form.preferredInvestments.fixedDeposits}
-                      onChange={handleChange}
-                      style={styles.checkboxInput}
-                    />
-                    Fixed Deposits
-                  </label>
-                  <label style={styles.checkboxLabelInline}>
-                    <input
-                      type="checkbox"
-                      name="preferredInvestments.nfos"
-                      checked={form.preferredInvestments.nfos}
-                      onChange={handleChange}
-                      style={styles.checkboxInput}
-                    />
-                    NFOs
-                  </label>
-                  <label style={styles.checkboxLabelInline}>
-                    <input
-                      type="checkbox"
-                      name="preferredInvestments.nps"
-                      checked={form.preferredInvestments.nps}
-                      onChange={handleChange}
-                      style={styles.checkboxInput}
-                    />
-                    NPS
-                  </label>
+                {/* Skeleton for Security Settings Section */}
+                <div style={styles.skeletonSectionCard}>
+                  <div style={styles.skeletonSectionHeading}>
+                    <div style={styles.skeletonSectionIcon}></div>
+                    <div style={styles.skeletonTextMedium}></div>
+                  </div>
+                  {[1, 2, 3].map(i => (
+                    <div key={i} style={styles.skeletonInputGroup}>
+                      <div style={styles.skeletonTextSmall}></div>
+                      <div style={styles.skeletonInput}></div>
+                    </div>
+                  ))}
+                  <div style={styles.skeletonTwoFactorAuthGroup}>
+                    <div>
+                      <div style={styles.skeletonTextSmall}></div>
+                      <div style={styles.skeletonTextSmall}></div>
+                    </div>
+                    <div style={styles.skeletonToggleSwitch}></div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Security Settings Section */}
-            <div style={styles.sectionCard}>
-              <h3 style={styles.sectionHeading}>
-                <span style={styles.sectionIcon}>🔐</span> Security Settings
-              </h3>
-              {/* Change Password Fields */}
-              <div style={styles.inputGroup}>
-                <label htmlFor="currentPassword" style={styles.label}>Current Password</label>
-                <input
-                  name="currentPassword"
-                  id="currentPassword"
-                  type="password"
-                  value={form.currentPassword}
-                  onChange={handleChange}
-                  style={styles.input}
-                />
-              </div>
-              <div style={styles.inputGroup}>
-                <label htmlFor="newPassword" style={styles.label}>New Password</label>
-                <input
-                  name="newPassword"
-                  id="newPassword"
-                  type="password"
-                  placeholder="Create a strong password"
-                  value={form.newPassword}
-                  onChange={handleChange}
-                  style={styles.input}
-                />
-              </div>
-              <div style={styles.inputGroup}>
-                <label htmlFor="confirmNewPassword" style={styles.label}>Confirm New Password</label>
-                <input
-                  name="confirmNewPassword"
-                  id="confirmNewPassword"
-                  type="password"
-                  placeholder="Confirm your password"
-                  value={form.confirmNewPassword}
-                  onChange={handleChange}
-                  style={styles.input}
-                />
-              </div>
-
-              {/* Two-Factor Authentication Toggle */}
-              <div style={styles.twoFactorAuthGroup}>
-                <div>
-                  <label htmlFor="twoFactorAuth" style={styles.label}>Two-Factor Authentication</label>
-                  <p style={styles.twoFactorSubtext}>Add an extra layer of security to your account</p>
+                {/* Skeleton for Save Button */}
+                <div style={styles.skeletonSaveButton}></div>
+              </>
+            ) : (
+              <>
+                {/* Personal Information Section */}
+                <div style={styles.sectionCard}>
+                  <h3 style={styles.sectionHeading}>
+                    <span style={styles.sectionIcon}>👤</span> Personal Information
+                  </h3>
+                  <div style={styles.gridTwoColumns}>
+                    {/* Full Name */}
+                    <div style={styles.inputGroup}>
+                      <label htmlFor="fullName" style={styles.label}>Full Name</label>
+                      <input
+                        name="fullName"
+                        id="fullName"
+                        value={form.fullName}
+                        onChange={handleChange}
+                        style={styles.input}
+                      />
+                    </div>
+                    {/* Email Address */}
+                    <div style={styles.inputGroup}>
+                      <label htmlFor="email" style={styles.label}>Email Address</label>
+                      <input
+                        name="email"
+                        id="email"
+                        type="email"
+                        value={form.email}
+                        disabled // As per original code, email is disabled
+                        style={styles.inputDisabled}
+                      />
+                    </div>
+                    {/* Phone Number */}
+                    <div style={styles.inputGroup}>
+                      <label htmlFor="phone" style={styles.label}>Phone Number</label>
+                      <input
+                        name="phone"
+                        id="phone"
+                        type="tel"
+                        value={form.phone}
+                        onChange={handleChange}
+                        style={styles.input}
+                      />
+                    </div>
+                    {/* Date of Birth (Simulated) */}
+                    <div style={styles.inputGroup}>
+                      <label htmlFor="dateOfBirth" style={styles.label}>Date of Birth</label>
+                      <input
+                        name="dateOfBirth"
+                        id="dateOfBirth"
+                        type="date" // Use type="date" for date picker
+                        value={form.dateOfBirth}
+                        onChange={handleChange}
+                        style={styles.input}
+                      />
+                    </div>
+                  </div>
+                  {/* Address */}
+                  <div style={styles.inputGroup}>
+                    <label htmlFor="address" style={styles.label}>Address</label>
+                    <textarea
+                      name="address"
+                      id="address"
+                      value={form.address}
+                      onChange={handleChange}
+                      style={styles.textarea}
+                    ></textarea>
+                  </div>
                 </div>
-                <label style={styles.switch}>
-                  <input
-                    type="checkbox"
-                    name="twoFactorAuth"
-                    id="twoFactorAuth"
-                    checked={form.twoFactorAuth}
-                    onChange={handleChange}
-                  />
-                  <span style={styles.slider}></span>
-                </label>
-              </div>
-            </div>
 
-            {/* Save Button (moved to bottom of form sections) */}
-            <button type="submit" style={styles.saveButton}>Save Changes</button>
+                {/* Investment Preferences Section */}
+                <div style={styles.sectionCard}>
+                  <h3 style={styles.sectionHeading}>
+                    <span style={styles.sectionIcon}>📈</span> Investment Preferences
+                  </h3>
+                  {/* Risk Tolerance Radio Buttons */}
+                  <div style={styles.inputGroup}>
+                    <label style={styles.label}>Risk Tolerance</label>
+                    <div style={styles.radioGroup}>
+                      <label style={styles.radioLabel}>
+                        <input
+                          type="radio"
+                          name="riskTolerance"
+                          value="conservative"
+                          checked={form.riskTolerance === 'conservative'}
+                          onChange={handleChange}
+                          style={styles.radioInput}
+                        />
+                        Conservative
+                      </label>
+                      <label style={styles.radioLabel}>
+                        <input
+                          type="radio"
+                          name="riskTolerance"
+                          value="moderate"
+                          checked={form.riskTolerance === 'moderate'}
+                          onChange={handleChange}
+                          style={styles.radioInput}
+                        />
+                        Moderate
+                      </label>
+                      <label style={styles.radioLabel}>
+                        <input
+                          type="radio"
+                          name="riskTolerance"
+                          value="aggressive"
+                          checked={form.riskTolerance === 'aggressive'}
+                          onChange={handleChange}
+                          style={styles.radioInput}
+                        />
+                        Aggressive
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Preferred Investment Categories Checkboxes */}
+                  <div style={styles.inputGroup}>
+                    <label style={styles.label}>Preferred Investment Categories</label>
+                    <div style={styles.checkboxGroup}>
+                      <label style={styles.checkboxLabelInline}>
+                        <input
+                          type="checkbox"
+                          name="preferredInvestments.mutualFunds"
+                          checked={form.preferredInvestments.mutualFunds}
+                          onChange={handleChange}
+                          style={styles.checkboxInput}
+                        />
+                        Mutual Funds
+                      </label>
+                      <label style={styles.checkboxLabelInline}>
+                        <input
+                          type="checkbox"
+                          name="preferredInvestments.stocks"
+                          checked={form.preferredInvestments.stocks}
+                          onChange={handleChange}
+                          style={styles.checkboxInput}
+                        />
+                        Stocks
+                      </label>
+                      <label style={styles.checkboxLabelInline}>
+                        <input
+                          type="checkbox"
+                          name="preferredInvestments.etfs"
+                          checked={form.preferredInvestments.etfs}
+                          onChange={handleChange}
+                          style={styles.checkboxInput}
+                        />
+                        ETFs
+                      </label>
+                      <label style={styles.checkboxLabelInline}>
+                        <input
+                          type="checkbox"
+                          name="preferredInvestments.fixedDeposits"
+                          checked={form.preferredInvestments.fixedDeposits}
+                          onChange={handleChange}
+                          style={styles.checkboxInput}
+                        />
+                        Fixed Deposits
+                      </label>
+                      <label style={styles.checkboxLabelInline}>
+                        <input
+                          type="checkbox"
+                          name="preferredInvestments.nfos"
+                          checked={form.preferredInvestments.nfos}
+                          onChange={handleChange}
+                          style={styles.checkboxInput}
+                        />
+                        NFOs
+                      </label>
+                      <label style={styles.checkboxLabelInline}>
+                        <input
+                          type="checkbox"
+                          name="preferredInvestments.nps"
+                          checked={form.preferredInvestments.nps}
+                          onChange={handleChange}
+                          style={styles.checkboxInput}
+                        />
+                        NPS
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Security Settings Section */}
+                <div style={styles.sectionCard}>
+                  <h3 style={styles.sectionHeading}>
+                    <span style={styles.sectionIcon}>🔐</span> Security Settings
+                  </h3>
+                  {/* Change Password Fields */}
+                  <div style={styles.inputGroup}>
+                    <label htmlFor="currentPassword" style={styles.label}>Current Password</label>
+                    <input
+                      name="currentPassword"
+                      id="currentPassword"
+                      type="password"
+                      value={form.currentPassword}
+                      onChange={handleChange}
+                      style={styles.input}
+                    />
+                  </div>
+                  <div style={styles.inputGroup}>
+                    <label htmlFor="newPassword" style={styles.label}>New Password</label>
+                    <input
+                      name="newPassword"
+                      id="newPassword"
+                      type="password"
+                      placeholder="Create a strong password"
+                      value={form.newPassword}
+                      onChange={handleChange}
+                      style={styles.input}
+                    />
+                  </div>
+                  <div style={styles.inputGroup}>
+                    <label htmlFor="confirmNewPassword" style={styles.label}>Confirm New Password</label>
+                    <input
+                      name="confirmNewPassword"
+                      id="confirmNewPassword"
+                      type="password"
+                      placeholder="Confirm your password"
+                      value={form.confirmNewPassword}
+                      onChange={handleChange}
+                      style={styles.input}
+                    />
+                  </div>
+
+                  {/* Two-Factor Authentication Toggle */}
+                  <div style={styles.twoFactorAuthGroup}>
+                    <div>
+                      <label htmlFor="twoFactorAuth" style={styles.label}>Two-Factor Authentication</label>
+                      <p style={styles.twoFactorSubtext}>Add an extra layer of security to your account</p>
+                    </div>
+                    <label style={styles.switch}>
+                      <input
+                        type="checkbox"
+                        name="twoFactorAuth"
+                        id="twoFactorAuth"
+                        checked={form.twoFactorAuth}
+                        onChange={handleChange}
+                      />
+                      <span style={styles.slider}></span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Save Button (moved to bottom of form sections) */}
+                <button type="submit" style={styles.saveButton}>Save Changes</button>
+              </>
+            )}
             {message && <p style={styles.message}>{message}</p>}
           </form>
 
           {/* Right Column: Profile Summary Card */}
-          <div style={styles.profileSummaryCard}>
-            <div style={styles.profilePicContainer}>
-              <img src={profileSummary.profilePic} alt="Profile" style={styles.profilePic} />
-            </div>
-            <h3 style={styles.summaryName}>{profileSummary.name}</h3>
-            <p style={styles.summaryRole}>Financial Advisor</p> {/* Hardcoded as per UI */}
-            
-            <div style={styles.summaryDetails}>
-              <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Member Since</span>
-                <span style={styles.summaryValue}>{profileSummary.memberSince}</span>
+          {loading ? (
+            <div style={styles.skeletonProfileSummaryCard}>
+              <div style={styles.skeletonProfilePicContainer}>
+                <div style={styles.skeletonCircleLarge}></div>
               </div>
-              <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Total Investments</span>
-                <span style={styles.summaryValue}>{profileSummary.totalInvestments}</span>
-              </div>
-              <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Active Goals</span>
-                <span style={styles.summaryValue}>{profileSummary.activeGoals}</span>
+              <div style={styles.skeletonTextLarge}></div>
+              <div style={styles.skeletonTextSmall}></div>
+              <div style={styles.skeletonSummaryDetails}>
+                {[1, 2, 3].map(i => (
+                  <div key={i} style={styles.skeletonSummaryItem}>
+                    <div style={styles.skeletonTextSmall}></div>
+                    <div style={styles.skeletonTextMedium}></div>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
+          ) : (
+            <div style={styles.profileSummaryCard}>
+              <div style={styles.profilePicContainer}>
+                <img src={profileSummary.profilePic} alt="Profile" style={styles.profilePic} />
+              </div>
+              <h3 style={styles.summaryName}>{profileSummary.name}</h3>
+              <p style={styles.summaryRole}>Financial Advisor</p> {/* Hardcoded as per UI */}
+
+              <div style={styles.summaryDetails}>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryLabel}>Member Since</span>
+                  <span style={styles.summaryValue}>{profileSummary.memberSince}</span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryLabel}>Total Investments</span>
+                  <span style={styles.summaryValue}>{profileSummary.totalInvestments}</span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryLabel}>Active Goals</span>
+                  <span style={styles.summaryValue}>{profileSummary.activeGoals}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -484,6 +566,13 @@ const styles = {
   profileSubtitle: {
     fontSize: '1rem',
     color: '#666',
+  },
+  errorMessage: {
+    color: '#dc3545',
+    textAlign: 'center',
+    marginBottom: '1rem',
+    fontSize: '1rem',
+    fontWeight: '500',
   },
   mainContentGrid: {
     display: 'grid',
@@ -789,6 +878,182 @@ const styles = {
   summaryValue: {
     fontWeight: 'normal',
     color: '#333',
+  },
+
+  // Skeleton Loader Styles (reused and new)
+  '@keyframes pulse': {
+    '0%': { backgroundColor: '#e0e0e0' },
+    '50%': { backgroundColor: '#f0f0f0' },
+    '100%': { backgroundColor: '#e0e0e0' },
+  },
+  skeletonTextLarge: {
+    width: '80%',
+    height: '28px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginBottom: '10px',
+  },
+  skeletonTextMedium: {
+    width: '70%',
+    height: '20px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginBottom: '8px',
+  },
+  skeletonTextSmall: {
+    width: '50%',
+    height: '16px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonCircleLarge: { // For profile picture
+    width: '100px',
+    height: '100px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '50%',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonSectionCard: {
+    backgroundColor: '#fff',
+    borderRadius: '15px',
+    boxShadow: '0 5px 15px rgba(0,0,0,0.08)',
+    padding: '2rem',
+    minHeight: '200px', // Ensure skeleton has some height
+    animation: 'pulse 1.5s infinite ease-in-out',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.5rem',
+  },
+  skeletonSectionHeading: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginBottom: '1.5rem',
+  },
+  skeletonSectionIcon: {
+    width: '24px',
+    height: '24px',
+    backgroundColor: '#d0d0d0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonGridTwoColumns: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '1.5rem',
+    marginBottom: '1rem',
+    '@media (max-width: 600px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
+  skeletonInputGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
+  skeletonInput: {
+    width: '100%',
+    height: '45px', // Match input height
+    backgroundColor: '#e0e0e0',
+    borderRadius: '8px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonTextarea: {
+    width: '100%',
+    minHeight: '80px', // Match textarea height
+    backgroundColor: '#e0e0e0',
+    borderRadius: '8px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonRadioGroup: {
+    display: 'flex',
+    gap: '1.5rem',
+    flexWrap: 'wrap',
+  },
+  skeletonRadioLabel: {
+    width: '100px', // Approx width of a radio label
+    height: '40px', // Approx height of a radio label
+    backgroundColor: '#e0e0e0',
+    borderRadius: '8px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonCheckboxGroup: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '1rem',
+  },
+  skeletonCheckboxLabel: {
+    width: '120px', // Approx width of a checkbox label
+    height: '25px', // Approx height of a checkbox label
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonTwoFactorAuthGroup: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: '1.5rem',
+    paddingTop: '1.5rem',
+    borderTop: '1px solid #eee',
+  },
+  skeletonToggleSwitch: {
+    width: '50px',
+    height: '28px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '28px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonSaveButton: {
+    width: '100%',
+    height: '50px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '8px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginTop: '2rem',
+  },
+  skeletonProfileSummaryCard: {
+    backgroundColor: '#fff',
+    borderRadius: '15px',
+    boxShadow: '0 5px 15px rgba(0,0,0,0.08)',
+    padding: '2rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    minWidth: '280px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonProfilePicContainer: {
+    width: '100px',
+    height: '100px',
+    borderRadius: '50%',
+    overflow: 'hidden',
+    marginBottom: '1rem',
+    border: '3px solid #e0e0e0', // Skeleton border
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#eee',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonSummaryDetails: {
+    width: '100%',
+    borderTop: '1px solid #eee',
+    paddingTop: '1.5rem',
+    marginTop: '1rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.8rem',
+  },
+  skeletonSummaryItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
   },
 };
 

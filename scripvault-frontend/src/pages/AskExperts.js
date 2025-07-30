@@ -40,7 +40,7 @@ const AskExperts = () => {
       try {
         const data = await getAllQueries();
         // Sort queries by date, most recent first
-        const sortedData = data.sort((a, b) => new Date(b.date) - new Date(a.date));
+        const sortedData = (data || []).sort((a, b) => new Date(b.date) - new Date(a.date)); // Ensure data is array
         setPreviousQueries(sortedData);
       } catch (err) {
         console.error("Failed to fetch previous queries:", err);
@@ -98,10 +98,17 @@ const AskExperts = () => {
             <h1 style={styles.mainTitle}>Ask Our Experts</h1>
             <p style={styles.subtitle}>Get personalized investment advice from our certified financial experts</p>
           </div>
-          <div style={styles.headerActions}>
-            <button style={styles.adminViewButton}>⚙️ Admin View</button>
-            <button style={styles.expertSupportButton}>🧑‍💻 24/7 Expert Support</button>
-          </div>
+          {loading ? (
+            <div style={styles.headerActions}>
+              <div style={styles.skeletonButtonSmall}></div>
+              <div style={styles.skeletonButtonSmall}></div>
+            </div>
+          ) : (
+            <div style={styles.headerActions}>
+              <button style={styles.adminViewButton}>⚙️ Admin View</button>
+              <button style={styles.expertSupportButton}>🧑‍💻 24/7 Expert Support</button>
+            </div>
+          )}
         </div>
 
         {/* Submit Your Query Section */}
@@ -109,67 +116,87 @@ const AskExperts = () => {
           <h3 style={styles.sectionHeading}>
             <span style={styles.sectionIcon}>📝</span> Submit Your Query
           </h3>
-          <form onSubmit={handleSubmit} style={styles.form}>
-            <div style={styles.inputGrid}>
-              {/* Investment Type Dropdown */}
-              <div style={styles.inputGroup}>
-                <label htmlFor="investmentType" style={styles.label}>Investment Type</label>
-                <select
-                  name="investmentType"
-                  id="investmentType"
-                  value={form.investmentType}
-                  onChange={handleInput}
-                  style={styles.selectInput}
-                >
-                  <option value="General">Select Investment Type</option>
-                  <option value="Long-Term Investment">Long-Term Investment</option>
-                  <option value="Short-Term Goals">Short-Term Goals</option>
-                  <option value="Tax Saving Options">Tax Saving Options</option>
-                  <option value="Retirement Planning">Retirement Planning</option>
-                  <option value="Equity">Equity</option>
-                  <option value="Debt">Debt</option>
-                </select>
+          {loading ? (
+            <div style={styles.form}>
+              <div style={styles.inputGrid}>
+                <div style={styles.skeletonInputGroup}>
+                  <div style={styles.skeletonTextSmall}></div>
+                  <div style={styles.skeletonSelectFull}></div>
+                </div>
+                <div style={styles.skeletonInputGroup}>
+                  <div style={styles.skeletonTextSmall}></div>
+                  <div style={styles.skeletonSelectFull}></div>
+                </div>
+              </div>
+              <div style={styles.skeletonInputGroup}>
+                <div style={styles.skeletonTextSmall}></div>
+                <div style={styles.skeletonTextarea}></div>
+              </div>
+              <div style={styles.skeletonSubmitButton}></div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} style={styles.form}>
+              <div style={styles.inputGrid}>
+                {/* Investment Type Dropdown */}
+                <div style={styles.inputGroup}>
+                  <label htmlFor="investmentType" style={styles.label}>Investment Type</label>
+                  <select
+                    name="investmentType"
+                    id="investmentType"
+                    value={form.investmentType}
+                    onChange={handleInput}
+                    style={styles.selectInput}
+                  >
+                    <option value="General">Select Investment Type</option>
+                    <option value="Long-Term Investment">Long-Term Investment</option>
+                    <option value="Short-Term Goals">Short-Term Goals</option>
+                    <option value="Tax Saving Options">Tax Saving Options</option>
+                    <option value="Retirement Planning">Retirement Planning</option>
+                    <option value="Equity">Equity</option>
+                    <option value="Debt">Debt</option>
+                  </select>
+                </div>
+
+                {/* Goal Type Dropdown */}
+                <div style={styles.inputGroup}>
+                  <label htmlFor="goalType" style={styles.label}>Goal Type</label>
+                  <select
+                    name="goalType"
+                    id="goalType"
+                    value={form.goalType}
+                    onChange={handleInput}
+                    style={styles.selectInput}
+                  >
+                    <option value="General">Select Goal Type</option>
+                    <option value="Retirement">Retirement</option>
+                    <option value="Child Education">Child Education</option>
+                    <option value="Home Purchase">Home Purchase</option>
+                    <option value="Wealth Creation">Wealth Creation</option>
+                    <option value="Emergency Fund">Emergency Fund</option>
+                  </select>
+                </div>
               </div>
 
-              {/* Goal Type Dropdown */}
+              {/* Your Question Textarea */}
               <div style={styles.inputGroup}>
-                <label htmlFor="goalType" style={styles.label}>Goal Type</label>
-                <select
-                  name="goalType"
-                  id="goalType"
-                  value={form.goalType}
+                <label htmlFor="question" style={styles.label}>Your Question</label>
+                <textarea
+                  name="question"
+                  id="question"
+                  rows="6" // Increased rows for more space
+                  value={form.question}
                   onChange={handleInput}
-                  style={styles.selectInput}
-                >
-                  <option value="General">Select Goal Type</option>
-                  <option value="Retirement">Retirement</option>
-                  <option value="Child Education">Child Education</option>
-                  <option value="Home Purchase">Home Purchase</option>
-                  <option value="Wealth Creation">Wealth Creation</option>
-                  <option value="Emergency Fund">Emergency Fund</option>
-                </select>
+                  placeholder="Describe your investment query in detail..."
+                  style={styles.textarea}
+                ></textarea>
               </div>
-            </div>
 
-            {/* Your Question Textarea */}
-            <div style={styles.inputGroup}>
-              <label htmlFor="question" style={styles.label}>Your Question</label>
-              <textarea
-                name="question"
-                id="question"
-                rows="6" // Increased rows for more space
-                value={form.question}
-                onChange={handleInput}
-                placeholder="Describe your investment query in detail..."
-                style={styles.textarea}
-              ></textarea>
-            </div>
-
-            {/* Submit Query Button */}
-            <button type="submit" style={styles.submitButton}>
-              <span style={styles.buttonIcon}>✉️</span> Submit Query
-            </button>
-          </form>
+              {/* Submit Query Button */}
+              <button type="submit" style={styles.submitButton}>
+                <span style={styles.buttonIcon}>✉️</span> Submit Query
+              </button>
+            </form>
+          )}
           {message && <p style={styles.message}>{message}</p>}
         </div>
 
@@ -179,9 +206,31 @@ const AskExperts = () => {
             <span style={styles.sectionIcon}>🕒</span> Your Previous Queries
           </h3>
           {loading ? (
-            <p style={styles.loadingMessage}>Loading previous queries...</p>
+            // Skeleton loader for previous queries
+            <div style={styles.queryList}>
+              {[1, 2, 3].map(i => (
+                <div key={i} style={styles.skeletonQueryItemCard}>
+                  <div style={styles.skeletonQueryItemHeader}>
+                    <div style={styles.skeletonTextSmall}></div>
+                    <div style={styles.skeletonTextSmall}></div>
+                  </div>
+                  <div style={styles.skeletonTextMedium}></div>
+                  <div style={styles.skeletonQueryTags}>
+                    <div style={styles.skeletonTag}></div>
+                    <div style={styles.skeletonTag}></div>
+                  </div>
+                  <div style={styles.skeletonQueryResponse}>
+                    <div style={styles.skeletonExpertInfo}>
+                      <div style={styles.skeletonAvatar}></div>
+                      <div style={styles.skeletonTextSmall}></div>
+                    </div>
+                    <div style={styles.skeletonTextareaSmall}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : error ? (
-            <p style={{ ...styles.loadingMessage, color: '#dc3545' }}>{error}</p>
+            <p style={{ ...styles.message, color: '#dc3545' }}>{error}</p>
           ) : previousQueries.length === 0 ? (
             <p style={styles.noQueriesMessage}>You have no previous queries.</p>
           ) : (
@@ -499,6 +548,130 @@ const styles = {
     fontSize: '1.1rem',
     color: '#777',
     marginTop: '3rem',
+  },
+
+  // Skeleton Loader Styles (new and reused)
+  '@keyframes pulse': {
+    '0%': { backgroundColor: '#e0e0e0' },
+    '50%': { backgroundColor: '#f0f0f0' },
+    '100%': { backgroundColor: '#e0e0e0' },
+  },
+  skeletonTextLarge: {
+    width: '80%',
+    height: '28px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginBottom: '10px',
+  },
+  skeletonTextMedium: {
+    width: '70%',
+    height: '20px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginBottom: '8px',
+  },
+  skeletonTextSmall: {
+    width: '50%',
+    height: '16px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonButtonSmall: { // Reused from Dashboard
+    padding: '0.6rem 1.2rem',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '8px',
+    width: '150px', // Adjusted width for header buttons
+    height: '35px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonInputGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
+  skeletonSelectFull: {
+    width: '100%',
+    height: '45px', // Match select height
+    backgroundColor: '#e0e0e0',
+    borderRadius: '8px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonTextarea: {
+    width: '100%',
+    minHeight: '120px', // Match textarea height
+    backgroundColor: '#e0e0e0',
+    borderRadius: '8px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonSubmitButton: {
+    width: '200px', // Match submit button width
+    height: '50px', // Match submit button height
+    backgroundColor: '#e0e0e0',
+    borderRadius: '8px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginTop: '1.5rem',
+  },
+  skeletonQueryItemCard: {
+    backgroundColor: '#f9fafb',
+    borderRadius: '10px',
+    padding: '1.5rem',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    border: '1px solid #eee',
+    minHeight: '200px', // Ensure skeleton has some height
+    animation: 'pulse 1.5s infinite ease-in-out',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+  },
+  skeletonQueryItemHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  skeletonQueryTags: {
+    display: 'flex',
+    gap: '0.5rem',
+    flexWrap: 'wrap',
+    width: '100%',
+  },
+  skeletonTag: {
+    width: '80px',
+    height: '25px',
+    backgroundColor: '#d0d0d0',
+    borderRadius: '5px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonQueryResponse: {
+    marginTop: '1rem',
+    paddingTop: '1rem',
+    borderTop: '1px solid #eee',
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.8rem',
+  },
+  skeletonExpertInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  },
+  skeletonAvatar: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    backgroundColor: '#d0d0d0',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonTextareaSmall: {
+    width: '100%',
+    height: '80px', // Smaller height for response text
+    backgroundColor: '#d0d0d0',
+    borderRadius: '8px',
+    animation: 'pulse 1.5s infinite ease-in-out',
   },
 };
 

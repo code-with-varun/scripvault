@@ -10,6 +10,6 @@ export const getNetWorthTrend = async () => {
   return new Promise(resolve => {
     setTimeout(() => {
       resolve(networthData);
-    }, 300); // Simulate a small delay
+    }, 1300); // Simulate a small delay
   });
 };

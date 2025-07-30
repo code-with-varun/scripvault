@@ -9,8 +9,14 @@ const Investments = () => {
   const [error, setError] = useState(null); // Add error state
 
   // Helper function for currency formatting
-  const formatCurrency = (value) => `₹${parseFloat(value).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-  const formatPercentage = (value) => `${parseFloat(value).toFixed(2)}%`;
+  const formatCurrency = (value) => {
+    if (value === null || value === undefined) return '₹ --';
+    return `₹${parseFloat(value).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  };
+  const formatPercentage = (value) => {
+    if (value === null || value === undefined) return '--%';
+    return `${parseFloat(value).toFixed(2)}%`;
+  };
 
   // Fetch investments data on component mount
   useEffect(() => {
@@ -20,7 +26,7 @@ const Investments = () => {
       try {
         const data = await getInvestments();
         // Calculate gain/loss and percentage for each item after fetching
-        const processedData = data.map(item => {
+        const processedData = (data || []).map(item => { // Ensure data is an array
           const gainLoss = item.marketValue - item.investedValue;
           const gainLossPercent = item.investedValue > 0 ? (gainLoss / item.investedValue) * 100 : 0;
           return {
@@ -55,19 +61,12 @@ const Investments = () => {
   };
 
   // Calculate overall portfolio summary
-  const totalInvested = investments.reduce((sum, item) => sum + item.investedValue, 0);
-  const totalMarketValue = investments.reduce((sum, item) => sum + item.marketValue, 0);
+  // Ensure investments is an array before calling reduce
+  const totalInvested = (investments || []).reduce((sum, item) => sum + item.investedValue, 0);
+  const totalMarketValue = (investments || []).reduce((sum, item) => sum + item.marketValue, 0);
   const overallGainLoss = totalMarketValue - totalInvested;
   const overallGainLossPercent = totalInvested > 0 ? (overallGainLoss / totalInvested) * 100 : 0;
   const isOverallPositive = overallGainLoss >= 0;
-
-  if (loading) {
-    return <p style={styles.loadingMessage}>Loading investments...</p>;
-  }
-
-  if (error) {
-    return <p style={{ ...styles.loadingMessage, color: '#dc3545' }}>{error}</p>;
-  }
 
   return (
     <div style={styles.pageContainer}>
@@ -77,32 +76,78 @@ const Investments = () => {
           <p style={styles.portfolioSubtitle}>Track your current holdings and performance</p>
         </div>
 
+        {error && <p style={styles.errorMessage}>{error}</p>}
         {message && <p style={styles.message}>{message}</p>}
 
         {/* Overall Portfolio Summary Card */}
         <div style={styles.summaryCard}>
           <h3 style={styles.summaryTitle}>Overall Portfolio Performance</h3>
-          <div style={styles.summaryGrid}>
-            <div style={styles.summaryItem}>
-              <span style={styles.summaryLabel}>Total Invested</span>
-              <span style={styles.summaryValue}>{formatCurrency(totalInvested)}</span>
+          {loading ? (
+            <div style={styles.summaryGrid}>
+              <div style={styles.summaryItem}>
+                <div style={styles.skeletonTextSmall}></div>
+                <div style={styles.skeletonTextMedium}></div>
+              </div>
+              <div style={styles.summaryItem}>
+                <div style={styles.skeletonTextSmall}></div>
+                <div style={styles.skeletonTextMedium}></div>
+              </div>
+              <div style={styles.summaryItem}>
+                <div style={styles.skeletonTextSmall}></div>
+                <div style={styles.skeletonTextMedium}></div>
+              </div>
             </div>
-            <div style={styles.summaryItem}>
-              <span style={styles.summaryLabel}>Current Value</span>
-              <span style={styles.summaryValue}>{formatCurrency(totalMarketValue)}</span>
+          ) : (
+            <div style={styles.summaryGrid}>
+              <div style={styles.summaryItem}>
+                <span style={styles.summaryLabel}>Total Invested</span>
+                <span style={styles.summaryValue}>{formatCurrency(totalInvested)}</span>
+              </div>
+              <div style={styles.summaryItem}>
+                <span style={styles.summaryLabel}>Current Value</span>
+                <span style={styles.summaryValue}>{formatCurrency(totalMarketValue)}</span>
+              </div>
+              <div style={styles.summaryItem}>
+                <span style={styles.summaryLabel}>Total Gain/Loss</span>
+                <span style={{ ...styles.summaryValue, color: isOverallPositive ? '#28a745' : '#dc3545' }}>
+                  {overallGainLoss >= 0 ? '+' : ''}{formatCurrency(overallGainLoss)} ({formatPercentage(overallGainLossPercent)})
+                </span>
+              </div>
             </div>
-            <div style={styles.summaryItem}>
-              <span style={styles.summaryLabel}>Total Gain/Loss</span>
-              <span style={{ ...styles.summaryValue, color: isOverallPositive ? '#28a745' : '#dc3545' }}>
-                {overallGainLoss >= 0 ? '+' : ''}{formatCurrency(overallGainLoss)} ({formatPercentage(overallGainLossPercent)})
-              </span>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Individual Investments Grid */}
         <div style={styles.investmentsGrid}>
-          {investments.length === 0 ? (
+          {loading ? (
+            // Skeleton loader for individual investment cards
+            [1, 2, 3, 4].map(i => (
+              <div key={i} style={styles.skeletonInvestmentCard}>
+                <div style={styles.skeletonCardHeader}>
+                  <div style={styles.skeletonCircle}></div>
+                  <div style={styles.skeletonTextGroup}>
+                    <div style={styles.skeletonTextMedium}></div>
+                    <div style={styles.skeletonTextSmall}></div>
+                  </div>
+                  <div style={styles.skeletonRemoveButton}></div>
+                </div>
+                <div style={styles.skeletonCardDetailsGrid}>
+                  <div style={styles.skeletonDetailItem}>
+                    <div style={styles.skeletonTextSmall}></div>
+                    <div style={styles.skeletonTextMedium}></div>
+                  </div>
+                  <div style={styles.skeletonDetailItem}>
+                    <div style={styles.skeletonTextSmall}></div>
+                    <div style={styles.skeletonTextMedium}></div>
+                  </div>
+                  <div style={styles.skeletonDetailItem}>
+                    <div style={styles.skeletonTextSmall}></div>
+                    <div style={styles.skeletonTextMedium}></div>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : investments.length === 0 ? (
             <p style={styles.noInvestmentsMessage}>You have no investments in your portfolio. Start exploring!</p>
           ) : (
             investments.map(item => {
@@ -119,7 +164,7 @@ const Investments = () => {
                       &times; {/* Times symbol for close/remove */}
                     </button>
                   </div>
-                  
+
                   <div style={styles.cardDetailsGrid}>
                     <div style={styles.detailItem}>
                       <span style={styles.detailLabel}>Invested</span>
@@ -174,6 +219,13 @@ const styles = {
   portfolioSubtitle: {
     fontSize: '1rem',
     color: '#666',
+  },
+  errorMessage: {
+    color: '#dc3545',
+    textAlign: 'center',
+    marginBottom: '1rem',
+    fontSize: '1rem',
+    fontWeight: '500',
   },
   message: {
     textAlign: 'center',
@@ -309,6 +361,97 @@ const styles = {
     color: '#777',
     marginTop: '3rem',
     gridColumn: '1 / -1', // Span across all columns
+  },
+
+  // Skeleton Loader Styles (reused and new)
+  '@keyframes pulse': {
+    '0%': { backgroundColor: '#e0e0e0' },
+    '50%': { backgroundColor: '#f0f0f0' },
+    '100%': { backgroundColor: '#e0e0e0' },
+  },
+  skeletonTextLarge: {
+    width: '80%',
+    height: '28px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginBottom: '10px',
+  },
+  skeletonTextMedium: {
+    width: '70%',
+    height: '20px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginBottom: '8px',
+  },
+  skeletonTextSmall: {
+    width: '50%',
+    height: '16px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonCircle: {
+    width: '40px',
+    height: '40px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '50%',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonSummaryCard: { // For the overall summary card
+    backgroundColor: '#fff',
+    borderRadius: '15px',
+    boxShadow: '0 5px 15px rgba(0,0,0,0.08)',
+    padding: '2rem',
+    marginBottom: '2rem',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonInvestmentCard: { // For individual investment cards
+    backgroundColor: '#fff',
+    borderRadius: '15px',
+    boxShadow: '0 5px 15px rgba(0,0,0,0.08)',
+    padding: '1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    minHeight: '200px', // Ensure skeleton has some height
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonCardHeader: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '1rem',
+    marginBottom: '1.5rem',
+    position: 'relative',
+    width: '100%',
+  },
+  skeletonTextGroup: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '5px',
+  },
+  skeletonRemoveButton: {
+    position: 'absolute',
+    top: '0',
+    right: '0',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '50%',
+    width: '24px',
+    height: '24px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonCardDetailsGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '1rem',
+    width: '100%',
+  },
+  skeletonDetailItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '5px',
   },
 };
 

@@ -42,7 +42,7 @@ const Home = () => {
         </div>
         <div style={styles.heroRight}>
           <img
-            src="https://assets-global.website-files.com/63f734fb25b6c647a0c249c1/64228f2341751e8d16be12cd_investing-hero-img.png" // Placeholder, replace with actual icon from UI
+            src="investing-hero-img.webp" // Placeholder, replace with actual icon from UI
             alt="Investment Graphic"
             style={styles.heroImg}
           />

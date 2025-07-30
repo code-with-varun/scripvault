@@ -7,7 +7,7 @@ const Explore = () => {
   const [filterType, setFilterType] = useState('All Types');
   const [filterCAGR, setFilterCAGR] = useState('CAGR %');
   const [filterRisk, setFilterRisk] = useState('Risk Level');
-  const [activeCategory, setActiveCategory] = useState('Mutual Funds');
+  const [activeCategory, setActiveCategory] = useState('Mutual Fund');
   const [sortOption, setSortOption] = useState('Sort by Performance');
   const [exploreResults, setExploreResults] = useState([]);
   const [allExploreData, setAllExploreData] = useState([]); // Store all fetched data
@@ -87,9 +87,9 @@ const Explore = () => {
       if (sortOption === 'Sort by Performance') {
         // Handle different performance metrics based on type
         const getPerformance = (item) => {
-          if (item.type === 'Mutual Funds' && item.oneYearCAGR) return parseFloat(item.oneYearCAGR.replace('%', ''));
-          if (item.type === 'Stocks' && item.oneYearReturn) return parseFloat(item.oneYearReturn.replace('%', ''));
-          if (item.type === 'ETFs' && item.oneYearReturn) return parseFloat(item.oneYearReturn.replace('%', ''));
+          if (item.type === 'Mutual Fund' && item.oneYearCAGR) return parseFloat(item.oneYearCAGR.replace('%', ''));
+          if (item.type === 'Stock' && item.oneYearReturn) return parseFloat(item.oneYearReturn.replace('%', ''));
+          if (item.type === 'ETF' && item.oneYearReturn) return parseFloat(item.oneYearReturn.replace('%', ''));
           return 0; // Default to 0 if no relevant performance metric
         };
         return getPerformance(b) - getPerformance(a); // Descending performance
@@ -124,14 +124,6 @@ const Explore = () => {
     setTimeout(() => setMessage(''), 3000);
   };
 
-  if (loading) {
-    return <p style={styles.loadingMessage}>Loading investments...</p>;
-  }
-
-  if (error) {
-    return <p style={{ ...styles.loadingMessage, color: '#dc3545' }}>{error}</p>;
-  }
-
   return (
     <div style={styles.pageContainer}>
       <div style={styles.contentWrapper}>
@@ -140,91 +132,185 @@ const Explore = () => {
           <p style={styles.exploreSubtitle}>Discover stocks, mutual funds, and investment opportunities</p>
         </div>
 
+        {error && <p style={styles.errorMessage}>{error}</p>}
+
         {/* Search and Filter Bar */}
         <div style={styles.filterBar}>
-          <div style={styles.searchBox}>
-            <span style={styles.searchIcon}>🔍</span>
-            <input
-              type="text"
-              placeholder="Search stocks, mutual funds..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={styles.searchInput}
-            />
-          </div>
-          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} style={styles.filterSelect}>
-            <option>All Types</option>
-            <option>Mutual Funds</option>
-            <option>Stocks</option>
-            <option>ETFs</option>
-            <option>NFOs</option>
-            {/* <option>NPS</option> // NPS is not in your explore.json, consider adding if needed */}
-          </select>
-          <select value={filterCAGR} onChange={(e) => setFilterCAGR(e.target.value)} style={styles.filterSelect}>
-            <option>CAGR %</option>
-            <option>5%+</option>
-            <option>10%+</option>
-            <option>15%+</option>
-          </select>
-          <select value={filterRisk} onChange={(e) => setFilterRisk(e.target.value)} style={styles.filterSelect}>
-            <option>Risk Level</option>
-            <option>Low Risk</option>
-            <option>Medium Risk</option>
-            <option>High Risk</option>
-          </select>
-          <button style={styles.filterButton}>Filter</button>
+          {loading ? (
+            <>
+              <div style={styles.skeletonSearchBox}>
+                <span style={styles.searchIcon}>🔍</span>
+                <div style={styles.skeletonInput}></div>
+              </div>
+              <div style={styles.skeletonSelect}></div>
+              <div style={styles.skeletonSelect}></div>
+              <div style={styles.skeletonSelect}></div>
+              <div style={styles.skeletonButton}></div>
+            </>
+          ) : (
+            <>
+              <div style={styles.searchBox}>
+                <span style={styles.searchIcon}>🔍</span>
+                <input
+                  type="text"
+                  placeholder="Search stocks, mutual funds..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={styles.searchInput}
+                />
+              </div>
+              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} style={styles.filterSelect}>
+                <option>All Types</option>
+                <option>Mutual Funds</option>
+                <option>Stocks</option>
+                <option>ETFs</option>
+                <option>NFOs</option>
+                {/* <option>NPS</option> // NPS is not in your explore.json, consider adding if needed */}
+              </select>
+              <select value={filterCAGR} onChange={(e) => setFilterCAGR(e.target.value)} style={styles.filterSelect}>
+                <option>CAGR %</option>
+                <option>5%+</option>
+                <option>10%+</option>
+                <option>15%+</option>
+              </select>
+              <select value={filterRisk} onChange={(e) => setFilterRisk(e.target.value)} style={styles.filterSelect}>
+                <option>Risk Level</option>
+                <option>Low Risk</option>
+                <option>Medium Risk</option>
+                <option>High Risk</option>
+              </select>
+              <button style={styles.filterButton}>Filter</button>
+            </>
+          )}
         </div>
 
         {/* Category Tabs */}
         <div style={styles.categoryTabs}>
-          <button
-            style={activeCategory === 'Mutual Funds' ? styles.activeTab : styles.tabButton}
-            onClick={() => setActiveCategory('Mutual Funds')}
-          >
-            Mutual Funds
-          </button>
-          <button
-            style={activeCategory === 'Stocks' ? styles.activeTab : styles.tabButton}
-            onClick={() => setActiveCategory('Stocks')}
-          >
-            Stocks
-          </button>
-          <button
-            style={activeCategory === 'NFOs' ? styles.activeTab : styles.tabButton}
-            onClick={() => setActiveCategory('NFOs')}
-          >
-            NFOs
-          </button>
-          <button
-            style={activeCategory === 'ETFs' ? styles.activeTab : styles.tabButton}
-            onClick={() => setActiveCategory('ETFs')}
-          >
-            ETFs
-          </button>
+          {loading ? (
+            [1, 2, 3, 4].map(i => (
+              <div key={i} style={styles.skeletonTabButton}></div>
+            ))
+          ) : (
+            <>
+              <button
+                style={activeCategory === 'Mutual Funds' ? styles.activeTab : styles.tabButton}
+                onClick={() => setActiveCategory('Mutual Fund')}
+              >
+                Mutual Funds
+              </button>
+              <button
+                style={activeCategory === 'Stocks' ? styles.activeTab : styles.tabButton}
+                onClick={() => setActiveCategory('Stock')}
+              >
+                Stocks
+              </button>
+              <button
+                style={activeCategory === 'NFOs' ? styles.activeTab : styles.tabButton}
+                onClick={() => setActiveCategory('NFO')}
+              >
+                NFOs
+              </button>
+              <button
+                style={activeCategory === 'ETFs' ? styles.activeTab : styles.tabButton}
+                onClick={() => setActiveCategory('ETF')}
+              >
+                ETFs
+              </button>
+            </>
+          )}
         </div>
 
         {message && <p style={styles.message}>{message}</p>}
 
         {/* Results Header */}
         <div style={styles.resultsHeader}>
-          <span style={styles.resultsCount}>{exploreResults.length} Results</span>
-          <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} style={styles.sortSelect}>
-            <option>Sort by Performance</option>
-            <option>Sort by Name (A-Z)</option>
-            {/* Add more sorting options like 'Sort by AUM' if AUM data is available */}
-          </select>
-          {/* Grid/List Toggle Button */}
-          <button onClick={() => setIsGridView(!isGridView)} style={styles.toggleViewButton}>
-            {isGridView ? '☰' : '▦'}
-          </button>
+          {loading ? (
+            <>
+              <div style={styles.skeletonTextMedium}></div>
+              <div style={styles.skeletonSelect}></div>
+              <div style={styles.skeletonToggleViewButton}></div>
+            </>
+          ) : (
+            <>
+              <span style={styles.resultsCount}>{exploreResults.length} Results</span>
+              <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} style={styles.sortSelect}>
+                <option>Sort by Performance</option>
+                <option>Sort by Name (A-Z)</option>
+                {/* Add more sorting options like 'Sort by AUM' if AUM data is available */}
+              </select>
+              {/* Grid/List Toggle Button */}
+              <button onClick={() => setIsGridView(!isGridView)} style={styles.toggleViewButton}>
+                {isGridView ? '☰' : '▦'}
+              </button>
+            </>
+          )}
         </div>
 
         {/* Investment Cards Grid/List */}
-        <div style={isGridView ? styles.investmentCardsGrid : styles.investmentCardsList}>
-          {exploreResults.length === 0 ? (
-            <p style={styles.noResultsMessage}>No investments found matching your criteria.</p>
-          ) : (
-            exploreResults.map(item => (
+        {loading ? (
+          <div style={isGridView ? styles.investmentCardsGrid : styles.investmentCardsList}>
+            {[1, 2, 3, 4].map(i => ( // Render multiple skeleton cards
+              <div key={i} style={isGridView ? styles.skeletonInvestmentCardGrid : styles.skeletonInvestmentCardList}>
+                {/* Skeleton for common header */}
+                <div style={isGridView ? styles.skeletonCardHeader : styles.skeletonListItemHeader}>
+                  <div style={styles.skeletonCircle}></div>
+                  <div style={styles.skeletonTextGroup}>
+                    <div style={styles.skeletonTextMedium}></div>
+                    <div style={styles.skeletonTextSmall}></div>
+                  </div>
+                  <div style={styles.skeletonRiskTag}></div>
+                </div>
+
+                {/* Skeleton for details (dynamic based on view) */}
+                {isGridView ? (
+                  <div style={styles.skeletonCardDetailsGrid}>
+                    <div style={styles.skeletonDetailItem}>
+                      <div style={styles.skeletonTextSmall}></div>
+                      <div style={styles.skeletonTextMedium}></div>
+                    </div>
+                    <div style={styles.skeletonDetailItem}>
+                      <div style={styles.skeletonTextSmall}></div>
+                      <div style={styles.skeletonTextMedium}></div>
+                    </div>
+                    <div style={styles.skeletonDetailItem}>
+                      <div style={styles.skeletonTextSmall}></div>
+                      <div style={styles.skeletonTextMedium}></div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={styles.skeletonListItemDetails}>
+                    <div style={styles.skeletonDetailItem}>
+                      <div style={styles.skeletonTextSmall}></div>
+                      <div style={styles.skeletonTextMedium}></div>
+                    </div>
+                    <div style={styles.skeletonDetailItem}>
+                      <div style={styles.skeletonTextSmall}></div>
+                      <div style={styles.skeletonTextMedium}></div>
+                    </div>
+                    <div style={styles.skeletonDetailItem}>
+                      <div style={styles.skeletonTextSmall}></div>
+                      <div style={styles.skeletonTextMedium}></div>
+                    </div>
+                    <div style={styles.skeletonDetailItem}>
+                      <div style={styles.skeletonTextSmall}></div>
+                      <div style={styles.skeletonTextMedium}></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Skeleton for actions */}
+                <div style={isGridView ? styles.skeletonCardActions : styles.skeletonListItemActions}>
+                  <div style={styles.skeletonButtonSmall}></div>
+                  <div style={styles.skeletonButtonSmall}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : exploreResults.length === 0 ? (
+          <p style={styles.noResultsMessage}>No investments found matching your criteria.</p>
+        ) : (
+          <div style={isGridView ? styles.investmentCardsGrid : styles.investmentCardsList}>
+            {exploreResults.map(item => (
               <div key={item.id} style={isGridView ? styles.investmentCard : styles.investmentListItem}>
                 {/* Common header for both views */}
                 <div style={isGridView ? styles.cardHeader : styles.listItemHeader}>
@@ -405,9 +491,9 @@ const Explore = () => {
                   <button onClick={() => handleAddToPortfolio(item)} style={styles.addToButton}>Add to</button>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -441,6 +527,13 @@ const styles = {
   exploreSubtitle: {
     fontSize: '1rem',
     color: '#666',
+  },
+  errorMessage: {
+    color: '#dc3545',
+    textAlign: 'center',
+    marginBottom: '1rem',
+    fontSize: '1rem',
+    fontWeight: '500',
   },
 
   // Filter Bar Styles
@@ -749,6 +842,184 @@ const styles = {
     color: '#777',
     marginTop: '3rem',
     gridColumn: '1 / -1',
+  },
+
+  // Skeleton Loader Styles (reused from Dashboard.js and new ones)
+  '@keyframes pulse': {
+    '0%': { backgroundColor: '#e0e0e0' },
+    '50%': { backgroundColor: '#f0f0f0' },
+    '100%': { backgroundColor: '#e0e0e0' },
+  },
+  skeletonTextLarge: {
+    width: '80%',
+    height: '28px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginBottom: '10px',
+  },
+  skeletonTextMedium: {
+    width: '70%',
+    height: '20px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+    marginBottom: '8px',
+  },
+  skeletonTextSmall: {
+    width: '50%',
+    height: '16px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonCircle: {
+    width: '40px',
+    height: '40px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '50%',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonSearchBox: {
+    display: 'flex',
+    alignItems: 'center',
+    border: '1px solid #ddd',
+    borderRadius: '8px',
+    padding: '0.5rem 1rem',
+    flexGrow: 1,
+    maxWidth: '300px',
+    height: '40px', // Match input height
+    backgroundColor: '#e0e0e0', // Placeholder background
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonInput: {
+    flex: 1,
+    height: '20px',
+    backgroundColor: '#d0d0d0',
+    borderRadius: '4px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonSelect: {
+    padding: '0.8rem 1rem',
+    borderRadius: '8px',
+    border: '1px solid #ddd',
+    backgroundColor: '#e0e0e0',
+    minWidth: '120px',
+    height: '40px', // Match select height
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonButton: {
+    padding: '0.8rem 1.5rem',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '8px',
+    width: '100px', // Example width
+    height: '40px', // Match button height
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonTabButton: {
+    padding: '0.8rem 1.5rem',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '8px',
+    width: '120px', // Example width
+    height: '40px', // Match tab button height
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonToggleViewButton: {
+    backgroundColor: '#e0e0e0',
+    borderRadius: '8px',
+    width: '50px', // Match toggle button width
+    height: '40px', // Match toggle button height
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonInvestmentCardGrid: {
+    backgroundColor: '#fff',
+    borderRadius: '15px',
+    boxShadow: '0 5px 15px rgba(0,0,0,0.08)',
+    padding: '1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    minHeight: '250px', // Ensure skeleton has some height
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonInvestmentCardList: {
+    backgroundColor: '#fff',
+    borderRadius: '10px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    padding: '1rem 1.5rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: '1rem',
+    minHeight: '100px', // Ensure skeleton has some height
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonCardHeader: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '1rem',
+    width: '100%',
+  },
+  skeletonListItemHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+    flex: '1 1 250px',
+  },
+  skeletonTextGroup: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '5px',
+  },
+  skeletonRiskTag: {
+    marginLeft: 'auto',
+    width: '80px',
+    height: '25px',
+    backgroundColor: '#d0d0d0',
+    borderRadius: '5px',
+    animation: 'pulse 1.5s infinite ease-in-out',
+  },
+  skeletonCardDetailsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
+    gap: '1rem',
+    width: '100%',
+  },
+  skeletonListItemDetails: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '1.5rem',
+    flex: '2 1 400px',
+  },
+  skeletonDetailItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '5px',
+    minWidth: '80px',
+  },
+  skeletonCardActions: {
+    display: 'flex',
+    gap: '1rem',
+    marginTop: '1rem',
+    justifyContent: 'flex-end',
+    width: '100%',
+  },
+  skeletonListItemActions: {
+    display: 'flex',
+    gap: '0.8rem',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    flex: '1 1 200px',
+  },
+  skeletonButtonSmall: {
+    padding: '0.8rem 1.2rem',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '8px',
+    width: '120px', // Example width
+    height: '35px', // Match button height
+    animation: 'pulse 1.5s infinite ease-in-out',
   },
 };
 
