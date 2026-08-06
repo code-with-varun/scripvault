@@ -1,15 +1,40 @@
-// frontend/services/watchlistService.js
-// This service will now interact with your backend API
-// instead of mock data.
+// frontend/src/services/watchlistService.js
 
-// Define your backend API base URL
-const API_BASE_URL = 'http://localhost:3001'; // Ensure this matches your backend server's address
+const API_BASE_URL = 'http://localhost:3001/api'; // Updated API_BASE_URL as per your backend port
 
-// Helper function to get the JWT token from localStorage
-// In a real React app, you'd typically use a custom hook or context for this,
-// but for service files, we'll directly access localStorage for simplicity.
+/**
+ * Helper function to parse response, handling both JSON and non-JSON errors.
+ * Consumes the response body ONCE.
+ */
+const parseResponse = async (response) => {
+  let data;
+  try {
+    data = await response.json(); // Attempt to parse as JSON first
+  } catch (e) {
+    // If JSON parsing fails, it might be plain text or empty body
+    data = await response.text(); // Get as text
+    if (!response.ok) {
+        // If response is not OK and not JSON, throw a generic error with text content
+        throw new Error(`Server error: ${response.status} ${response.statusText}. Response: ${data.substring(0, 200)}`);
+    }
+    // If response is OK but not JSON (e.g., 204 No Content), data will be empty string or simple text.
+    return data; // Return text if it was successful non-JSON
+  }
+
+  if (!response.ok) {
+    // If response is not OK, and we successfully parsed JSON, use its message
+    const errorMessage = data.message || data.error || 'An unknown error occurred';
+    throw new Error(`API error (${response.status}): ${errorMessage}`);
+  }
+
+  return data; // Return parsed JSON data
+};
+
+
 const getAuthToken = () => {
   try {
+    const token = localStorage.getItem('token');
+    if (token) return token;
     const user = JSON.parse(localStorage.getItem('user'));
     return user?.token;
   } catch (error) {
@@ -18,101 +43,71 @@ const getAuthToken = () => {
   }
 };
 
+/**
+ * Fetches the user's watchlist from the backend.
+ * @returns {Promise<Array<Object>>} An array of watchlist items (populated Stock objects).
+ */
 export const getWatchlist = async () => {
   const token = getAuthToken();
-  if (!token) {
-    console.error("No authentication token found for getWatchlist.");
-    // In a real app, you might redirect to login or throw an error
-    throw new Error("Authentication required.");
-  }
-
   try {
-    const response = await fetch(`${API_BASE_URL}/api/watchlist`, {
+    const response = await fetch(`${API_BASE_URL}/watchlist`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, // Include the JWT token
+        'Authorization': `Bearer ${token}`,
       },
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to fetch watchlist');
-    }
-
-    const data = await response.json();
-    return data.stocks || []; // Backend returns { user: ..., stocks: [...] }
+    return await parseResponse(response);
   } catch (error) {
-    console.error("Error in getWatchlist:", error);
-    throw error; // Re-throw to be handled by the component
-  }
-};
-
-export const addToWatchlist = async (item) => {
-  const token = getAuthToken();
-  if (!token) {
-    console.error("No authentication token found for addToWatchlist.");
-    throw new Error("Authentication required.");
-  }
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/watchlist/add`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, // Include the JWT token
-      },
-      body: JSON.stringify(item), // Send the item data to the backend
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to add to watchlist');
-    }
-
-    const data = await response.json();
-    // The backend returns the updated watchlist with populated stocks.
-    // We need to return the newly added item or the updated list as per frontend expectation.
-    // Assuming frontend expects the updated list:
-    return data.stocks; // Return the full updated stocks array from the watchlist
-  } catch (error) {
-    console.error("Error in addToWatchlist:", error);
+    console.error('Error fetching watchlist:', error);
     throw error;
   }
 };
 
-export const removeFromWatchlist = async (id) => {
+/**
+ * Adds an item to the user's watchlist.
+ * @param {Object} itemData - The data for the item to add (e.g., name, type, currentPrice, etc.).
+ * @returns {Promise<Object>} The newly added watchlist item (Stock object) from the backend.
+ */
+export const addToWatchlist = async (itemData) => {
   const token = getAuthToken();
-  if (!token) {
-    console.error("No authentication token found for removeFromWatchlist.");
-    throw new Error("Authentication required.");
-  }
-
   try {
-    // Backend's delete route for investments is /api/investment/:investmentId
-    // For watchlist, you might need a specific delete endpoint or modify existing.
-    // Assuming you will add a DELETE /api/watchlist/:stockId endpoint on backend.
-    // For now, I will use a POST with ID in body, or you can adjust backend to DELETE /api/watchlist/:id
-    // If backend has DELETE /api/watchlist/:id, change method to 'DELETE' and URL to `${API_BASE_URL}/api/watchlist/${id}`
-    // For simplicity, let's assume a DELETE route on the backend for watchlist items.
-    const response = await fetch(`${API_BASE_URL}/api/watchlist/remove/${id}`, { // Assuming a /remove/:id endpoint
-      method: 'DELETE', // Assuming DELETE method for removal
+    const response = await fetch(`${API_BASE_URL}/watchlist/add`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, // Include the JWT token
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(itemData),
+    });
+
+    return await parseResponse(response);
+  } catch (error) {
+    console.error('Error adding to watchlist:', error);
+    throw error;
+  }
+};
+
+/**
+ * Removes an item from the user's watchlist.
+ * @param {string} id - The ID of the Stock to remove from the user's watchlist.
+ * @returns {Promise<Object>} A success message.
+ */
+export const removeFromWatchlist = async (id) => {
+  const token = getAuthToken();
+  try {
+    const response = await fetch(`${API_BASE_URL}/watchlist/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to remove from watchlist');
-    }
-
-    // Backend might return a success message or the updated list.
-    // For simplicity, we'll just return true on success.
-    return true;
+    return await parseResponse(response);
   } catch (error) {
-    console.error("Error in removeFromWatchlist:", error);
+    console.error('Error removing from watchlist:', error);
     throw error;
   }
 };

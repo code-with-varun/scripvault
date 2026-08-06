@@ -98,17 +98,73 @@ const AskExperts = () => {
             <h1 style={styles.mainTitle}>Ask Our Experts</h1>
             <p style={styles.subtitle}>Get personalized investment advice from our certified financial experts</p>
           </div>
-          {loading ? (
-            <div style={styles.headerActions}>
-              <div style={styles.skeletonButtonSmall}></div>
-              <div style={styles.skeletonButtonSmall}></div>
+        </div>
+
+        {/* Assigned Financial Advisor Banner / Card */}
+        <div style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '16px',
+          padding: '1.5rem',
+          marginBottom: '2rem',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+          border: '1px solid #e2e8f0',
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '1rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+            <div style={{
+              width: '60px',
+              height: '60px',
+              borderRadius: '50%',
+              backgroundColor: '#ffedd5',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.8rem'
+            }}>
+              👨‍💼
             </div>
-          ) : (
-            <div style={styles.headerActions}>
-              <button style={styles.adminViewButton}>⚙️ Admin View</button>
-              <button style={styles.expertSupportButton}>🧑‍💻 24/7 Expert Support</button>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.3rem' }}>
+                <h3 style={{ fontSize: '1.15rem', color: '#1e293b', margin: 0, fontWeight: '700' }}>Rajesh Sharma, CFP</h3>
+                <span style={{ fontSize: '0.78rem', backgroundColor: '#dcfce7', color: '#15803d', padding: '3px 10px', borderRadius: '12px', fontWeight: '600' }}>
+                  Assigned Advisor 🛡️
+                </span>
+              </div>
+              <p style={{ fontSize: '0.9rem', color: '#64748b', margin: '0 0 6px 0', fontWeight: '500' }}>Senior Wealth Specialist • Certified Financial Planner</p>
+              <div style={{ display: 'flex', gap: '1.2rem', fontSize: '0.85rem', color: '#475569' }}>
+                <span>📞 <strong>+91 98765 43210</strong></span>
+                <span>📧 <strong>advisor@scripvault.com</strong></span>
+              </div>
             </div>
-          )}
+          </div>
+          <div style={{ display: 'flex', gap: '0.8rem' }}>
+            <a href="tel:+919876543210" style={{
+              backgroundColor: '#FF7F27',
+              color: '#fff',
+              padding: '0.6rem 1.2rem',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              fontSize: '0.88rem',
+              fontWeight: '600'
+            }}>
+              📞 Call Advisor
+            </a>
+            <a href="mailto:advisor@scripvault.com" style={{
+              backgroundColor: '#1e293b',
+              color: '#fff',
+              padding: '0.6rem 1.2rem',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              fontSize: '0.88rem',
+              fontWeight: '600'
+            }}>
+              📧 Email Advisor
+            </a>
+          </div>
         </div>
 
         {/* Submit Your Query Section */}

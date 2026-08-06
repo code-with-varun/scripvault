@@ -6,11 +6,9 @@ const investmentSchema = new mongoose.Schema({
   portfolio: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Portfolio',
-    required: true
+    required: false // Making portfolio optional for initial creation, can be added later
   },
   // Reference to the User who owns this investment (for easier direct lookup/security checks)
-  // This is redundant if you always access via Portfolio, but can simplify some queries.
-  // Consider if you need this for direct ownership checks on individual investment routes.
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -36,9 +34,13 @@ const investmentSchema = new mongoose.Schema({
     required: true,
     min: 0
   },
+  quantity: {
+    type: Number,
+    default: 1
+  },
   frequency: {
     type: String,
-    enum: ['One-Time', 'SIP'], // Changed to match frontend casing
+    enum: ['one-time', 'sip'], // <<< CHANGED to lowercase to match frontend
     required: true
   },
   investedValue: { // Total capital invested in this specific holding
@@ -54,6 +56,10 @@ const investmentSchema = new mongoose.Schema({
   logo: {
     type: String, // URL for the investment's logo
     trim: true
+  },
+  realizedGainLoss: {
+    type: Number,
+    default: 0
   },
   purchaseDate: {
     type: Date,

@@ -1,0 +1,730 @@
+/* frontend/src/components/Explore.module.css */
+
+.pageContainer {
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  font-family: 'Poppins', sans-serif;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.contentWrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: 2rem;
+}
+
+.exploreHeader {
+  text-align: left;
+  margin-bottom: 2rem;
+  margin-left: 1rem;
+}
+
+.exploreTitle {
+  font-size: 2.2rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.exploreSubtitle {
+  font-size: 1rem;
+  color: #666;
+}
+
+.errorMessage {
+  color: #dc3545;
+  text-align: center;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Sticky Filter Section */
+.stickyFilterSection {
+  position: sticky;
+  top: 70px;
+  z-index: 950;
+  background-color: #f5f7fa;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Filter Bar Styles */
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  flex-grow: 1;
+  max-width: 300px;
+}
+
+.searchIcon {
+  margin-right: 10px;
+  color: #888;
+}
+
+.searchInput {
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  flex: 1;
+  padding: 0.2rem 0;
+}
+
+.filterSelect {
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  font-size: 0.95rem;
+  cursor: pointer;
+  outline: none;
+  min-width: 120px;
+}
+
+.filterButton {
+  padding: 0.8rem 1.5rem;
+  background-color: #FF7F27;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+.filterButton:hover { /* Converted from '&:hover' */
+  background-color: #E06B20;
+}
+
+/* Category Tabs Styles */
+.categoryTabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.tabButton {
+  padding: 0.8rem 1.5rem;
+  background-color: #fff;
+  color: #555;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+.tabButton:hover { /* Converted from '&:hover' */
+  border-color: #FF7F27;
+}
+
+.activeTab {
+  padding: 0.8rem 1.5rem;
+  background-color: #FF7F27;
+  color: #fff;
+  border: 1px solid #FF7F27;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.message {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+.message.success { /* Added for dynamic message color */
+    color: #28a745;
+}
+.message.error { /* Added for dynamic message color */
+    color: #dc3545;
+}
+
+
+/* Results Header (Count and Sort) */
+.resultsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.resultsCount {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.sortSelect {
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  font-size: 0.95rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.toggleViewButton {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #555;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+.toggleViewButton:hover { /* Converted from '&:hover' */
+  border-color: #FF7F27;
+}
+
+/* Investment Cards Grid/List Styles */
+.investmentCardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.investmentCardsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.investmentCard {
+  background-color: #fff;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.investmentListItem {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* Styles for list item layout */
+.listItemHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1 1 250px;
+  min-width: 200px;
+}
+
+.listItemNameAndSubtype {
+  flex: 1;
+}
+
+.listItemDetails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  flex: 2 1 400px;
+  justify-content: flex-start;
+}
+@media (max-width: 768px) { /* Converted from '@media' */
+  .listItemDetails {
+    flex: 1 1 100%;
+    justify-content: space-around;
+    order: 1;
+  }
+}
+
+.listItemDetailColumn {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  min-width: 80px;
+}
+
+.listItemActions {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex: 1 1 200px;
+}
+@media (max-width: 768px) { /* Converted from '@media' */
+  .listItemActions {
+    flex: 1 1 100%;
+    justify-content: center;
+    order: 2;
+  }
+}
+
+/* Existing styles (adjusted where necessary for consistency) */
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.cardLogo {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.cardTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.2rem 0;
+  text-align: left;
+}
+
+.cardSubtitle {
+  font-size: 0.9rem;
+  color: #777;
+  margin: 0;
+  text-align: left;
+}
+
+.riskTag {
+  margin-left: auto;
+  padding: 0.3rem 0.8rem;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+/* Specific risk tag colors */
+.riskTag.lowRisk {
+  background-color: #d4edda;
+  color: #155724;
+}
+.riskTag.mediumRisk {
+  background-color: #fff3cd;
+  color: #856404;
+}
+.riskTag.highRisk {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+
+.cardDetailsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.detailLabel {
+  font-size: 0.8rem;
+  color: #777;
+  margin-bottom: 0.2rem;
+}
+
+.detailValue {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+/* Specific colors for day change */
+.detailValue.positiveChange {
+  color: #28a745;
+}
+.detailValue.negativeChange {
+  color: #dc3545;
+}
+
+
+.cardActions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.addToWatchlistButton {
+  padding: 0.8rem 1.2rem;
+  background-color: #fff;
+  color: #FF7F27;
+  border: 1px solid #FF7F27;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.addToWatchlistButton:hover { /* Converted from '&:hover' */
+  background-color: #FF7F27;
+  color: #fff;
+}
+
+.addToButton { /* Used for "Invest" button */
+  padding: 0.8rem 1.2rem;
+  background-color: #FF7F27;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+.addToButton:hover { /* Converted from '&:hover' */
+  background-color: #E06B20;
+}
+
+.noResultsMessage {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #777;
+  margin-top: 3rem;
+  grid-column: 1 / -1;
+}
+
+/* Skeleton Loader Styles */
+@keyframes pulse {
+  0% { background-color: #e0e0e0; }
+  50% { background-color: #f0f0f0; }
+  100% { background-color: #e0e0e0; }
+}
+
+.skeletonTextLarge {
+  width: 80%;
+  height: 28px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  animation: pulse 1.5s infinite ease-in-out;
+  margin-bottom: 10px;
+}
+
+.skeletonTextMedium {
+  width: 70%;
+  height: 20px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  animation: pulse 1.5s infinite ease-in-out;
+  margin-bottom: 8px;
+}
+
+.skeletonTextSmall {
+  width: 50%;
+  height: 16px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonCircle {
+  width: 40px;
+  height: 40px;
+  background-color: #e0e0e0;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonSearchBox {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  flex-grow: 1;
+  max-width: 300px;
+  height: 40px;
+  background-color: #e0e0e0;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonInput {
+  flex: 1;
+  height: 20px;
+  background-color: #d0d0d0;
+  border-radius: 4px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonSelect {
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background-color: #e0e0e0;
+  min-width: 120px;
+  height: 40px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonButton {
+  padding: 0.8rem 1.5rem;
+  background-color: #e0e0e0;
+  border-radius: 8px;
+  width: 100px;
+  height: 40px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonTabButton {
+  padding: 0.8rem 1.5rem;
+  background-color: #e0e0e0;
+  border-radius: 8px;
+  width: 120px;
+  height: 40px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonToggleViewButton {
+  background-color: #e0e0e0;
+  border-radius: 8px;
+  width: 50px;
+  height: 40px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonInvestmentCardGrid {
+  background-color: #fff;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 250px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonInvestmentCardList {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  min-height: 100px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonCardHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+}
+
+.skeletonListItemHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1 1 250px;
+}
+
+.skeletonTextGroup {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.skeletonRiskTag {
+  margin-left: auto;
+  width: 80px;
+  height: 25px;
+  background-color: #d0d0d0;
+  border-radius: 5px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonCardDetailsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+.skeletonListItemDetails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  flex: 2 1 400px;
+}
+
+.skeletonDetailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 80px;
+}
+
+.skeletonCardActions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.skeletonListItemActions {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex: 1 1 200px;
+}
+
+.skeletonButtonSmall {
+  padding: 0.8rem 1.2rem;
+  background-color: #e0e0e0;
+  border-radius: 8px;
+  width: 120px;
+  height: 35px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+/* New styles for Invest Modal */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+  text-align: left;
+}
+
+.modalTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.modalDescription {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.modalInputGroup {
+  margin-bottom: 1rem;
+}
+
+.modalLabel {
+  display: block;
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.modalInput {
+  width: 100%;
+  padding: 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.modalSelect {
+  width: 100%;
+  padding: 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  box-sizing: border-box;
+  outline: none;
+  background-color: #fff;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  margin-top: 1.5rem;
+}
+
+.modalCancelButton {
+  padding: 0.8rem 1.5rem;
+  background-color: #ccc;
+  color: #333;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+.modalCancelButton:hover {
+  background-color: #bbb;
+}
+
+.modalConfirmButton {
+  padding: 0.8rem 1.5rem;
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+.modalConfirmButton:hover {
+  background-color: #1e7e34;
+}

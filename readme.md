@@ -1,38 +1,38 @@
 # 📊 ScripVault
 
-ScripVault is a full-stack MERN (MongoDB, Express.js, React.js, Node.js) web application that allows users to manage their stock and mutual fund investments. Users can create investment goals, track portfolios, explore new scrips, and consult with experts — all in one platform.
+ScripVault is a full-stack MERN (MongoDB, Express.js, React.js, Node.js) web application that allows users to manage their stock and mutual fund investments. Users can track portfolios, explore new scrips, create transactions, manage watchlists, and consult with experts — all in one platform.
 
 ---
 
 ## 🔧 Project Structure
 
+```text
 scripvault/
 │
-├── backend/
-│ ├── controllers/ # Business logic for each route
-│ ├── models/ # Mongoose schemas (User, Portfolio, Investment, etc.)
-│ ├── routes/ # Express route handlers
-│ ├── middleware/ # Authentication middleware
-│ ├── server.js # Express server entry point
-│ └── .env # Environment variables (not pushed to Git)
+├── server/                        # Express.js Backend API
+│   ├── data/                      # Initial JSON seeds (explore, etc.)
+│   ├── models/                    # Mongoose Data Models (User, Investment, Transaction, etc.)
+│   ├── routes/                    # API Route Handlers (auth, portfolio, explore, etc.)
+│   ├── services/                  # Business logic & Market Engines
+│   ├── index.js                   # Main Express server entry point
+│   ├── package.json
+│   └── .env                       # Backend Environment Variables (Ignored in Git)
 │
-├── frontend/
-│ ├── public/
-│ ├── src/
-│ │ ├── components/
-│ │ │ ├── Auth/ # Login, Register
-│ │ │ ├── Dashboard/ # Profile, Portfolio, Explore, Watchlist, Ask Experts
-│ │ │ ├── Layout/ # Header, NavMenu, Content, Footer
-│ │ ├── App.js
-│ │ ├── Routes.js
-│ │ ├── index.js
-│ │ └── index.css
-│ └── .env # Frontend environment file
+├── scripvault-frontend/           # React.js Frontend App
+│   ├── public/                    # Static Assets & HTML template
+│   ├── src/
+│   │   ├── components/            # Layout & UI Components
+│   │   ├── context/               # Auth & Global Context
+│   │   ├── pages/                 # Page Views (Dashboard, Explore, Portfolio, etc.)
+│   │   ├── services/              # API Client Services
+│   │   ├── App.js                 # Main App & Router setup
+│   │   └── index.js
+│   ├── package.json
+│   └── .env                       # Frontend Environment Variables (Ignored in Git)
 │
 ├── .gitignore
-├── README.md
-└── package.json
-
+└── README.md
+```
 
 ---
 
@@ -40,181 +40,108 @@ scripvault/
 
 ### 🔐 User Authentication
 - Register and login with email and password
-- JWT-based authentication
-- Protected routes using middleware
+- JWT-based authorization for protected routes
+- Session persistence with React Context
 
-### 📊 Dashboard
-- View total net worth
-- Access to investments, explore, watchlist, profile, and expert advice
+### 📊 Dashboard & Net Worth Tracker
+- Real-time summary cards for total Net Worth, Market Value, and Invested Value
+- Interactive visual net worth growth chart
 
 ### 💼 Portfolio Management
-- View mutual funds and stocks grouped by category
-- Add investments as One-time or SIP
-- Track performance
+- Categorized investments (Stocks, Mutual Funds, ETFs, FDs, NPS)
+- Add new investments as One-time or SIP
+- Full transaction history tracking (Buy/Sell operations)
 
 ### 🔍 Explore Scrips
-- Fake stock API for demonstration
-- Add new scrips to portfolio or watchlist
+- Explore 15+ curated scrips across financial categories
+- Filter by asset types
+- Live simulated price fluctuations
 
 ### 🌟 Watchlist
-- Add stocks to watchlist from Explore
-- View them separately
+- Save favorite scrips from Explore directly to your personal Watchlist
+- Remove scrips seamlessly
 
-### 👤 Profile Settings
-- Update phone, password, and address
+### 👤 Profile Management
+- View & edit phone number, password, and postal address details
 
 ### 🧠 Ask Experts
-- Post investment-related queries
-- View in admin panel (simplified for demo)
+- Post investment questions to financial advisors
+- Track query status and view expert replies
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-- React.js
-- React Router v6+
-- CSS / custom styling
-- Axios for API communication
+- **React.js** (Hooks, Context API)
+- **React Router v6**
+- **CSS Modules / Custom CSS**
+- **Axios** for API requests
+- **Chart.js / Recharts** for financial visualization
 
 ### Backend
-- Node.js
-- Express.js
-- MongoDB with Mongoose
-- JWT for authentication
+- **Node.js** & **Express.js**
+- **MongoDB** with **Mongoose**
+- **JSON Web Tokens (JWT)** & **Bcrypt.js**
 
 ---
 
-## 🧪 Testing APIs
+## 📦 Environment Variables Configuration
 
-Use [ThunderClient](https://www.thunderclient.com/) or Postman to test backend APIs.
+Create a `.env` file in the `server/` directory and `scripvault-frontend/` directory before running:
 
-### Base URL: `http://localhost:3000/api`
+### Backend `server/.env` (Example)
+```env
+PORT=5000
+MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/scripvault?retryWrites=true&w=majority
+JWT_SECRET=your_jwt_secret_key_here
+```
 
-| Endpoint                | Method | Description                      |
-|------------------------|--------|----------------------------------|
-| `/register`            | POST   | User registration                |
-| `/login`               | POST   | User login                       |
-| `/profile`             | GET    | Fetch profile details            |
-| `/portfolio`           | GET    | Get user portfolio               |
-| `/portfolio/invest`    | POST   | Add investment                   |
-| `/investment/:id`      | GET    | Get single investment            |
-| `/investment/:id`      | PUT    | Update investment                |
-| `/investment/:id`      | DELETE | Delete investment                |
-| `/explore/add`         | POST   | Add a new scrip/stock            |
-| `/watchlist`           | GET    | Get user's watchlist             |
-| `/watchlist/add`       | POST   | Add stock to watchlist           |
-| `/ask-experts/submit`  | POST   | Submit an expert query           |
-
-> 🔐 Most routes require an `Authorization: Bearer <token>` header.
+### Frontend `scripvault-frontend/.env` (Example)
+```env
+REACT_APP_API_URL=http://localhost:5000/api
+```
 
 ---
 
-## 📦 Environment Variables
+## 🧪 API Endpoints Overview
 
-### Frontend `.env`
-REACT_APP_API_URL=http://localhost:3000/api
-
-
-### Backend `.env`
-MONGO_URI=your-mongodb-connection-string
-JWT_SECRET=your-secret-key
-PORT=3000
-
+| Endpoint                   | Method | Description                        | Protected |
+|----------------------------|--------|------------------------------------|-----------|
+| `/api/auth/register`       | POST   | Register a new user                | No        |
+| `/api/auth/login`          | POST   | User authentication                | No        |
+| `/api/profile`             | GET    | Fetch current user details         | Yes       |
+| `/api/profile`             | PUT    | Update user details                | Yes       |
+| `/api/portfolio`           | GET    | Fetch user portfolio & metrics     | Yes       |
+| `/api/portfolio/invest`    | POST   | Add new investment (SIP/One-Time)  | Yes       |
+| `/api/investment/:id`      | DELETE | Delete investment                  | Yes       |
+| `/api/explore`             | GET    | Get all scrips                     | Yes       |
+| `/api/watchlist`           | GET    | Get user's watchlist               | Yes       |
+| `/api/watchlist/add`       | POST   | Add scrip to watchlist             | Yes       |
+| `/api/watchlist/:id`       | DELETE | Remove scrip from watchlist        | Yes       |
+| `/api/ask-experts/submit`  | POST   | Submit advisory query              | Yes       |
+| `/api/transactions`        | GET    | Get user transaction history       | Yes       |
 
 ---
 
-## ✅ To Run This Project
+## ⚙️ Local Setup & Running
 
-### Backend
-
+### 1. Start the Backend Server
 ```bash
-cd backend
+cd server
 npm install
 npm start
-Frontend
-cd frontend
+```
+
+### 2. Start the Frontend App
+```bash
+cd scripvault-frontend
 npm install
 npm start
-Make sure both frontend and backend servers are running.
-
-📌 Git Setup
-.gitignore
-gitignore
-Copy
-Edit
-# Node modules
-node_modules/
-frontend/node_modules/
-backend/node_modules/
-
-# Env files
-.env
-frontend/.env
-backend/.env
-📞 Contact
-For queries or support, reach out to the project creator: Varun Akshay
-
-📃 License
-This project is for learning/demo purposes. Please do not use it in production without proper testing and security enhancements.
-
-## 🛠️ Tech Stack
-
-### Frontend
-- React.js
-- React Router v6+
-- CSS / custom styling
-- Axios for API communication
-
-### Backend
-- Node.js
-- Express.js
-- MongoDB with Mongoose
-- JWT for authentication
+```
 
 ---
 
-## 🧪 Testing APIs
+## 📄 License & Notes
+Developed as part of the Fullstack Capstone Project. All credentials and API keys must be kept private via `.env` files.
 
-Use [ThunderClient](https://www.thunderclient.com/) or Postman to test backend APIs.
-
-### Base URL: `http://localhost:3000/api`
-
-| Endpoint                | Method | Description                      |
-|------------------------|--------|----------------------------------|
-| `/register`            | POST   | User registration                |
-| `/login`               | POST   | User login                       |
-| `/profile`             | GET    | Fetch profile details            |
-| `/portfolio`           | GET    | Get user portfolio               |
-| `/portfolio/invest`    | POST   | Add investment                   |
-| `/investment/:id`      | GET    | Get single investment            |
-| `/investment/:id`      | PUT    | Update investment                |
-| `/investment/:id`      | DELETE | Delete investment                |
-| `/explore/add`         | POST   | Add a new scrip/stock            |
-| `/watchlist`           | GET    | Get user's watchlist             |
-| `/watchlist/add`       | POST   | Add stock to watchlist           |
-| `/ask-experts/submit`  | POST   | Submit an expert query           |
-
-> 🔐 Most routes require an `Authorization: Bearer <token>` header.
-
----
-
-## 📦 Environment Variables
-
-### Frontend `.env`
-REACT_APP_API_URL=http://localhost:3000/api
-
-
-### Backend `.env`
-MONGO_URI=your-mongodb-connection-string
-JWT_SECRET=your-secret-key
-PORT=3000
-
-
----
-
-## ✅ To Run This Project
-
-### Backend
-
----

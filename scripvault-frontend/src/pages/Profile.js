@@ -35,7 +35,7 @@ const Profile = () => {
     memberSince: '',
     totalInvestments: '',
     activeGoals: '',
-    profilePic: 'https://placehold.co/80x80/cccccc/white?text=Profile', // Default placeholder
+    profilePic: '/user-avatar.svg',
   });
 
   // Fetch profile data on component mount
@@ -45,25 +45,33 @@ const Profile = () => {
       setError(null);
       try {
         const data = await getUserProfile();
-        // Set form state with fetched data
+        const formattedDOB = data.dateOfBirth ? data.dateOfBirth.split('T')[0] : '';
         setForm(prevForm => ({
           ...prevForm,
           ...data,
-          // Ensure preferredInvestments is deeply merged if it's an object
+          dateOfBirth: formattedDOB,
+          riskTolerance: data.riskTolerance || 'moderate',
           preferredInvestments: data.preferredInvestments ? { ...prevForm.preferredInvestments, ...data.preferredInvestments } : prevForm.preferredInvestments,
         }));
-        // Set profile summary state with fetched data
-        setProfileSummary(data.profileSummary || {
+
+        setProfileSummary({
           name: data.fullName || 'User',
-          memberSince: 'N/A',
-          totalInvestments: 'N/A',
-          activeGoals: 'N/A',
-          profilePic: 'https://placehold.co/80x80/cccccc/white?text=Profile',
+          role: 'Individual Investor (Vault Gold 🏅)',
+          memberSince: data.memberSince || 'July 2026',
+          totalInvestments: `₹${(data.networth || 0).toLocaleString('en-IN')}`,
+          activeGoals: data.activeGoals || '3 Goals Active (Wealth, Retirement, Emergency)',
+          profilePic: (data.profilePic && !data.profilePic.includes('placehold')) ? data.profilePic : '/user-avatar.svg',
+          financialAdvisor: data.financialAdvisor || {
+            name: 'Rajesh Sharma, CFP',
+            title: 'Senior Wealth Specialist 👨‍💼',
+            phone: '+91 98765 43210',
+            email: 'advisor@scripvault.com',
+            status: 'Assigned 🛡️'
+          }
         });
       } catch (err) {
         console.error("Failed to fetch profile:", err);
         setError("Failed to load profile data. Please try again later.");
-        // Reset to default empty states on error
         setForm({
           fullName: '', email: '', phone: '', dateOfBirth: '', address: '',
           riskTolerance: 'moderate',
@@ -71,8 +79,9 @@ const Profile = () => {
           currentPassword: '', newPassword: '', confirmNewPassword: '', twoFactorAuth: false,
         });
         setProfileSummary({
-          name: 'User', memberSince: 'N/A', totalInvestments: 'N/A', activeGoals: 'N/A',
-          profilePic: 'https://placehold.co/80x80/cccccc/white?text=Profile',
+          name: 'User', role: 'Individual Investor', memberSince: 'July 2026', totalInvestments: '₹0', activeGoals: '3 Active Goals',
+          profilePic: '/user-avatar.svg',
+          financialAdvisor: { name: 'Rajesh Sharma, CFP', title: 'Senior Wealth Specialist 👨‍💼', phone: '+91 98765 43210', email: 'advisor@scripvault.com', status: 'Assigned 🛡️' }
         });
       } finally {
         setLoading(false);
@@ -514,7 +523,9 @@ const Profile = () => {
                 <img src={profileSummary.profilePic} alt="Profile" style={styles.profilePic} />
               </div>
               <h3 style={styles.summaryName}>{profileSummary.name}</h3>
-              <p style={styles.summaryRole}>Financial Advisor</p> {/* Hardcoded as per UI */}
+              <span style={{ display: 'inline-block', backgroundColor: '#eef2ff', color: '#4f46e5', padding: '4px 12px', borderRadius: '16px', fontSize: '0.82rem', fontWeight: '600', marginBottom: '1.2rem' }}>
+                {profileSummary.role || 'Individual Investor (Vault Gold 🏅)'}
+              </span>
 
               <div style={styles.summaryDetails}>
                 <div style={styles.summaryItem}>
@@ -522,12 +533,8 @@ const Profile = () => {
                   <span style={styles.summaryValue}>{profileSummary.memberSince}</span>
                 </div>
                 <div style={styles.summaryItem}>
-                  <span style={styles.summaryLabel}>Total Investments</span>
+                  <span style={styles.summaryLabel}>Total Portfolio Value</span>
                   <span style={styles.summaryValue}>{profileSummary.totalInvestments}</span>
-                </div>
-                <div style={styles.summaryItem}>
-                  <span style={styles.summaryLabel}>Active Goals</span>
-                  <span style={styles.summaryValue}>{profileSummary.activeGoals}</span>
                 </div>
               </div>
             </div>

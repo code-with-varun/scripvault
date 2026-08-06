@@ -31,15 +31,15 @@ const Login = () => {
       <div style={styles.loginCard}>
         {/* Left Side: Login Form */}
         <div style={styles.loginFormContainer}>
-          {/* Logo and Tagline - UI Enhancement */}
           <div style={styles.logoContainer}>
-            <img src="https://assets-global.website-files.com/63f734fb25b6c647a0c249c1/64016a4b162f4b01e74a8968_logo.svg" alt="ScripVault Logo" style={styles.logoImg} />
-            <h1 style={styles.logoText}>ScripVault</h1>
+            <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
+              <img src="/logo.svg" alt="ScripVault" style={styles.logoImg} />
+            </Link>
           </div>
           <h2 style={styles.welcomeText}>Track. Invest. Grow.</h2>
           <h3 style={styles.welcomeBackText}>Welcome Back</h3>
 
-          {/* Login Form - UI Enhancement for layout and labels */}
+          {/* Login Form */}
           <form onSubmit={handleSubmit} style={styles.form}>
             {/* Email Input Group */}
             <div style={styles.inputGroup}>
@@ -69,7 +69,7 @@ const Login = () => {
               />
             </div>
 
-            {/* Remember Me & Forgot Password - UI Enhancement */}
+            {/* Remember Me & Forgot Password */}
             <div style={styles.rememberForgot}>
               <label style={styles.checkboxLabel}>
                 <input type="checkbox" style={styles.checkbox} /> Remember me
@@ -77,22 +77,22 @@ const Login = () => {
               <Link to="/forgot-password" style={styles.forgotPassword}>Forgot Password?</Link>
             </div>
 
-            {/* Error Message Display - Use localError first, then authMessage */}
+            {/* Error Message Display */}
             {(localError || authMessage) && (
               <p style={{ ...styles.error, color: authMessage.includes('successful') ? 'green' : 'red' }}>
                 {localError || authMessage}
               </p>
             )}
 
-            {/* Sign In Button - UI Enhancement */}
+            {/* Sign In Button */}
             <button type="submit" style={styles.signInButton}>Sign In</button>
 
-            {/* OR Divider - UI Enhancement */}
+            {/* OR Divider */}
             <div style={styles.orDivider}>
               <span style={styles.orText}>OR</span>
             </div>
 
-            {/* Social Login Buttons - UI Enhancement (Placeholders for icons) */}
+            {/* Social Login Buttons */}
             <button type="button" style={styles.socialButton}>
               <img src="https://placehold.co/20x20/cccccc/white?text=G" alt="Google Icon" style={styles.socialIcon} /> Continue with Google
             </button>
@@ -100,10 +100,17 @@ const Login = () => {
               <img src="https://placehold.co/20x20/cccccc/white?text=in" alt="LinkedIn Icon" style={styles.socialIcon} /> Continue with LinkedIn
             </button>
 
-            {/* Create Account Link - UI Enhancement */}
+            {/* Create Account Link */}
             <p style={styles.newHere}>
               New here? <Link to="/signup" style={styles.createAccountLink}>Create an account</Link>
             </p>
+
+            {/* Back to Home Link - Placed Below Form */}
+            <div style={styles.bottomNavRow}>
+              <Link to="/" style={styles.backHomeLink}>
+                &larr; Back to Home
+              </Link>
+            </div>
           </form>
         </div>
 
@@ -162,20 +169,30 @@ const styles = {
       padding: '2rem',
     },
   },
+  bottomNavRow: {
+    marginTop: '1rem',
+    textAlign: 'center',
+  },
+  backHomeLink: {
+    color: '#718096',
+    fontSize: '0.88rem',
+    fontWeight: '600',
+    textDecoration: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    transition: 'color 0.2s ease',
+  },
   logoContainer: {
     display: 'flex',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: '1rem',
+    width: '100%',
+    marginBottom: '1.2rem',
   },
   logoImg: {
-    height: '35px', // Adjust size as per UI
-    marginRight: '10px',
-  },
-  logoText: {
-    fontSize: '1.8rem',
-    fontWeight: '700',
-    color: '#FF7F27', // Orange color from UI
-    margin: 0,
+    height: '48px',
+    maxWidth: '220px',
+    objectFit: 'contain',
   },
   welcomeText: {
     fontSize: '1rem',

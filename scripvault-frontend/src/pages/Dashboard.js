@@ -104,6 +104,109 @@ const SimpleNetWorthChart = ({ data, isLoading }) => {
 };
 
 
+/**
+ * Interactive SVG Donut/Pie Chart component for Portfolio Asset Allocation.
+ * Displays Mutual Funds, Stocks, and ETFs distribution percentages and values.
+ */
+const AssetAllocationChart = ({ data, isLoading }) => {
+  if (isLoading) {
+    return (
+      <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+        Loading asset allocation...
+      </div>
+    );
+  }
+
+  const mfVal = (data.mutualFunds || []).reduce((sum, mf) => sum + (mf.currentValue || 0), 0);
+  const stocksVal = (data.stocks || []).reduce((sum, st) => sum + (st.currentValue || 0), 0);
+  const totalVal = mfVal + stocksVal;
+
+  if (totalVal <= 0) {
+    return (
+      <div style={{ height: '220px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+        <span style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🥧</span>
+        <span style={{ fontWeight: '600' }}>No active holdings in portfolio</span>
+        <span style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '4px' }}>Explore assets to start building your wealth allocation!</span>
+      </div>
+    );
+  }
+
+  const mfPct = parseFloat(((mfVal / totalVal) * 100).toFixed(1));
+  const stocksPct = parseFloat(((stocksVal / totalVal) * 100).toFixed(1));
+
+  const circumference = 439.82;
+  const mfDash = (mfPct / 100) * circumference;
+  const stocksDash = (stocksPct / 100) * circumference;
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-around', gap: '1.5rem', padding: '0.5rem 0' }}>
+      {/* SVG Donut Chart Visual */}
+      <div style={{ position: 'relative', width: '180px', height: '180px' }}>
+        <svg viewBox="0 0 180 180" width="180" height="180">
+          <circle cx="90" cy="90" r="70" fill="transparent" stroke="#f1f5f9" strokeWidth="22" />
+          <circle
+            cx="90"
+            cy="90"
+            r="70"
+            fill="transparent"
+            stroke="#FF7F27"
+            strokeWidth="22"
+            strokeDasharray={`${mfDash} ${circumference - mfDash}`}
+            strokeDashoffset="0"
+            transform="rotate(-90 90 90)"
+            style={{ transition: 'stroke-dasharray 0.6s ease' }}
+          />
+          <circle
+            cx="90"
+            cy="90"
+            r="70"
+            fill="transparent"
+            stroke="#4F46E5"
+            strokeWidth="22"
+            strokeDasharray={`${stocksDash} ${circumference - stocksDash}`}
+            strokeDashoffset={`-${mfDash}`}
+            transform="rotate(-90 90 90)"
+            style={{ transition: 'stroke-dasharray 0.6s ease' }}
+          />
+        </svg>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+          <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Assets</span>
+          <span style={{ fontSize: '1.05rem', color: '#1e293b', fontWeight: '800' }}>₹{totalVal.toLocaleString('en-IN')}</span>
+        </div>
+      </div>
+
+      {/* Legend & Asset Breakdown Details */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', minWidth: '220px', flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', backgroundColor: '#fff7ed', borderRadius: '12px', border: '1px solid #ffedd5' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#FF7F27' }}></span>
+            <div>
+              <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#1e293b' }}>Mutual Funds</div>
+              <div style={{ fontSize: '0.78rem', color: '#64748b' }}>₹{mfVal.toLocaleString('en-IN')}</div>
+            </div>
+          </div>
+          <span style={{ fontSize: '0.95rem', fontWeight: '800', color: '#ea580c', backgroundColor: '#ffffff', padding: '2px 10px', borderRadius: '12px', border: '1px solid #fed7aa' }}>
+            {mfPct}%
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', backgroundColor: '#eef2ff', borderRadius: '12px', border: '1px solid #e0e7ff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#4F46E5' }}></span>
+            <div>
+              <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#1e293b' }}>Stocks & ETFs</div>
+              <div style={{ fontSize: '0.78rem', color: '#64748b' }}>₹{stocksVal.toLocaleString('en-IN')}</div>
+            </div>
+          </div>
+          <span style={{ fontSize: '0.95rem', fontWeight: '800', color: '#4338ca', backgroundColor: '#ffffff', padding: '2px 10px', borderRadius: '12px', border: '1px solid #c7d2fe' }}>
+            {stocksPct}%
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -164,7 +267,100 @@ const Dashboard = () => {
     };
 
     fetchAllDashboardData();
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
+
+  // Real-time SSE stream for Market Indices & Portfolio Net Worth / Gains Live Simulation
+  useEffect(() => {
+    const eventSource = new EventSource('http://localhost:3001/api/explore/stream');
+
+    eventSource.onmessage = (event) => {
+      try {
+        const updates = JSON.parse(event.data);
+        if (!updates || !Array.isArray(updates)) return;
+
+        const updateMap = new Map();
+        updates.forEach(u => {
+          if (u.id) updateMap.set(u.id.toString(), u);
+          if (u.symbol) updateMap.set(u.symbol.toUpperCase(), u);
+        });
+
+        const sensexUpd = updates.find(u => u.symbol === 'SENSEX');
+        const niftyUpd = updates.find(u => u.symbol === 'NIFTY');
+
+        setData(prevData => {
+          let updatedStocks = [...(prevData.stocks || [])];
+          let updatedMfs = [...(prevData.mutualFunds || [])];
+
+          updatedStocks = updatedStocks.map(st => {
+            const symKey = st.symbol ? st.symbol.toUpperCase() : '';
+            const upd = updateMap.get(st.id?.toString()) || updateMap.get(symKey);
+            if (upd && upd.currentPrice && upd.currentPrice > 0) {
+              const newUnitPrice = upd.currentPrice;
+              const newCurrentValue = (st.shares || 1) * newUnitPrice;
+              const investedVal = st.investedValue || 0;
+              const gainPercent = investedVal > 0 ? (((newCurrentValue - investedVal) / investedVal) * 100) : 0;
+              return {
+                ...st,
+                currentValue: newCurrentValue,
+                gainPercent: parseFloat(gainPercent.toFixed(2))
+              };
+            }
+            return st;
+          });
+
+          updatedMfs = updatedMfs.map(mf => {
+            const symKey = mf.symbol ? mf.symbol.toUpperCase() : '';
+            const upd = updateMap.get(mf.id?.toString()) || updateMap.get(symKey);
+            if (upd && upd.currentPrice && upd.currentPrice > 0) {
+              const newUnitPrice = upd.currentPrice;
+              const newCurrentValue = (mf.shares || 1) * newUnitPrice;
+              const investedVal = mf.investedValue || 0;
+              const gainPercent = investedVal > 0 ? (((newCurrentValue - investedVal) / investedVal) * 100) : 0;
+              return {
+                ...mf,
+                currentValue: newCurrentValue,
+                gainPercent: parseFloat(gainPercent.toFixed(2))
+              };
+            }
+            return mf;
+          });
+
+          const stocksVal = updatedStocks.reduce((sum, s) => sum + (s.currentValue || 0), 0);
+          const mfsVal = updatedMfs.reduce((sum, m) => sum + (m.currentValue || 0), 0);
+          const totalNetWorth = stocksVal + mfsVal;
+          const totalInvested = prevData.totalInvested || 0;
+          const totalGains = totalNetWorth - totalInvested;
+          const overallReturnPercent = totalInvested > 0 ? parseFloat(((totalGains / totalInvested) * 100).toFixed(2)) : 0;
+
+          return {
+            ...prevData,
+            stocks: updatedStocks,
+            mutualFunds: updatedMfs,
+            netWorth: totalNetWorth,
+            totalMarketValue: totalNetWorth,
+            totalGains: totalGains,
+            totalGainLoss: totalGains,
+            overallReturnPercent,
+            marketSnapshot: {
+              sensex: sensexUpd ? { value: sensexUpd.currentPrice, change: sensexUpd.dayChange } : prevData.marketSnapshot?.sensex,
+              nifty: niftyUpd ? { value: niftyUpd.currentPrice, change: niftyUpd.dayChange } : prevData.marketSnapshot?.nifty
+            }
+          };
+        });
+      } catch (err) {
+        console.error('Error parsing SSE stream message in Dashboard:', err);
+      }
+    };
+
+    eventSource.onerror = (err) => {
+      console.error('Dashboard SSE stream error:', err);
+      eventSource.close();
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, []);
 
   // Helper functions for formatting
   // Moved to top-level or outside component if reusable across components
@@ -177,6 +373,7 @@ const Dashboard = () => {
   return (
     <div style={styles.pageContainer}>
       <div style={styles.contentWrapper}>
+        {error && <div style={styles.errorMessage}>{error}</div>}
         {/* Welcome Section */}
         <div style={styles.welcomeSection}>
           <h1 style={styles.welcomeTitle}>Welcome back, {data.userName || 'User'}!</h1> {/* Use data.userName */}
@@ -286,18 +483,16 @@ const Dashboard = () => {
 
           {/* Investment Growth Chart & Quick Invest/Holdings Grid */}
           <div style={styles.investmentGrowthAndQuickInvestGrid}>
-            {/* Portfolio Growth Chart */}
+            {/* Asset Allocation Donut Chart */}
             <div style={styles.portfolioGrowthCard}>
               <div style={styles.portfolioGrowthHeader}>
-                <h3 style={styles.portfolioGrowthTitle}>Investment Growth</h3>
-                <div style={styles.chartTimeFilters}>
-                  <button style={styles.chartFilterButton}>1M</button>
-                  <button style={styles.chartFilterButton}>3M</button>
-                  <button style={{ ...styles.chartFilterButton, ...styles.activeChartFilter }}>1Y</button>
-                </div>
+                <h3 style={styles.portfolioGrowthTitle}>Asset Allocation Breakdown</h3>
+                <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600', backgroundColor: '#f1f5f9', padding: '3px 10px', borderRadius: '12px' }}>
+                  Live Holdings
+                </span>
               </div>
               <div style={styles.chartContainer}>
-                <SimpleNetWorthChart data={trend} isLoading={loading} />
+                <AssetAllocationChart data={data} isLoading={loading} />
               </div>
             </div>
 
@@ -313,8 +508,8 @@ const Dashboard = () => {
                   </>
                 ) : (
                   <>
-                    <button style={styles.quickInvestButton}>Invest in Mutual Funds</button>
-                    <button style={styles.quickInvestButton}>Invest in Stocks</button>
+                    <Link to="/explore?category=Mutual Fund" style={{ ...styles.quickInvestButton, textDecoration: 'none', display: 'block', textAlign: 'center', boxSizing: 'border-box' }}>Invest in Mutual Funds</Link>
+                    <Link to="/explore?category=Stock" style={{ ...styles.quickInvestButton, textDecoration: 'none', display: 'block', textAlign: 'center', boxSizing: 'border-box' }}>Invest in Stocks</Link>
                   </>
                 )}
               </div>
@@ -369,35 +564,41 @@ const Dashboard = () => {
                 </div>
                 <div style={styles.skeletonButton}></div>
               </>
-            ) : (
-              <>
-                <p style={styles.portfolioTotalValue}>{formatCurrency((data.stocks || []).reduce((sum, s) => sum + s.currentValue, 0))}</p>
-                <p style={{
-                  ...styles.portfolioReturn,
-                  // Calculate overall gain/loss for stocks based on current value vs. assumed initial value (shares * 100)
-                  color: (data.stocks || []).reduce((sum, s) => sum + (s.currentValue - (s.shares * 100)), 0) >= 0 ? '#28a745' : '#dc3545'
-                }}>
-                  {(data.stocks || []).reduce((sum, s) => sum + (s.currentValue - (s.shares * 100)), 0) >= 0 ? '+' : ''}
-                  {formatPercent(((data.stocks || []).reduce((sum, s) => sum + (s.currentValue - (s.shares * 100)), 0) / (data.stocks || []).reduce((sum, s) => sum + (s.shares * 100), 0)) * 100 || 0)} Overall
-                </p>
-                <div style={styles.portfolioItems}>
-                  {(data.stocks || []).map(stock => (
-                    <div key={stock.id} style={styles.portfolioItem}>
-                      <img src={stock.logo} alt={stock.name} style={styles.portfolioItemLogo} />
-                      <div style={styles.portfolioItemDetails}>
-                        <span style={styles.portfolioItemName}>{stock.name}</span>
-                        <span style={styles.portfolioItemSubtext}>{stock.shares} shares</span>
+            ) : (() => {
+              const stocksTotalValue = (data.stocks || []).reduce((sum, s) => sum + (s.currentValue || 0), 0);
+              const stocksInvestedValue = (data.stocks || []).reduce((sum, s) => sum + (s.investedValue || s.currentValue || 0), 0);
+              const stocksGain = stocksTotalValue - stocksInvestedValue;
+              const stocksReturnPct = stocksInvestedValue > 0 ? (stocksGain / stocksInvestedValue) * 100 : 0;
+              const isStocksPositive = stocksGain >= 0;
+
+              return (
+                <>
+                  <p style={styles.portfolioTotalValue}>{formatCurrency(stocksTotalValue)}</p>
+                  <p style={{
+                    ...styles.portfolioReturn,
+                    color: isStocksPositive ? '#28a745' : '#dc3545'
+                  }}>
+                    {isStocksPositive ? '+' : ''}{formatPercent(stocksReturnPct)} Overall
+                  </p>
+                  <div style={styles.portfolioItems}>
+                    {(data.stocks || []).map(stock => (
+                      <div key={stock.id} style={styles.portfolioItem}>
+                        <img src={stock.logo} alt={stock.name} style={styles.portfolioItemLogo} />
+                        <div style={styles.portfolioItemDetails}>
+                          <span style={styles.portfolioItemName}>{stock.name}</span>
+                          <span style={styles.portfolioItemSubtext}>{stock.shares} shares</span>
+                        </div>
+                        <span style={styles.portfolioItemValue}>{formatCurrency(stock.currentValue)}</span>
+                        <span style={{ ...styles.portfolioItemGain, color: stock.gainPercent >= 0 ? '#28a745' : '#dc3545' }}>
+                          {stock.gainPercent >= 0 ? '+' : ''}{formatPercent(stock.gainPercent)}
+                        </span>
                       </div>
-                      <span style={styles.portfolioItemValue}>{formatCurrency(stock.currentValue)}</span>
-                      <span style={{ ...styles.portfolioItemGain, color: stock.gainPercent >= 0 ? '#28a745' : '#dc3545' }}>
-                        {stock.gainPercent >= 0 ? '+' : ''}{formatPercent(stock.gainPercent)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <Link to="/investments" style={styles.viewAllButton}>View All Stocks</Link>
-              </>
-            )}
+                    ))}
+                  </div>
+                  <Link to="/investments" style={styles.viewAllButton}>View All Stocks</Link>
+                </>
+              );
+            })()}
           </div>
 
           {/* Mutual Funds Portfolio Card */}
@@ -422,35 +623,41 @@ const Dashboard = () => {
                 </div>
                 <div style={styles.skeletonButton}></div>
               </>
-            ) : (
-              <>
-                <p style={styles.portfolioTotalValue}>{formatCurrency((data.mutualFunds || []).reduce((sum, mf) => sum + mf.currentValue, 0))}</p>
-                <p style={{
-                  ...styles.portfolioReturn,
-                  // Calculate overall gain/loss for mutual funds based on current value vs. assumed initial value (sip * 10)
-                  color: (data.mutualFunds || []).reduce((sum, mf) => sum + (mf.currentValue - (mf.sip * 10)), 0) >= 0 ? '#28a745' : '#dc3545'
-                }}>
-                  {(data.mutualFunds || []).reduce((sum, mf) => sum + (mf.currentValue - (mf.sip * 10)), 0) >= 0 ? '+' : ''}
-                  {formatPercent(((data.mutualFunds || []).reduce((sum, mf) => sum + (mf.currentValue - (mf.sip * 10)), 0) / ((data.mutualFunds || []).reduce((sum, mf) => sum + (mf.sip * 10), 0) || 1)) * 100)} Overall
-                </p>
-                <div style={styles.portfolioItems}>
-                  {(data.mutualFunds || []).map(fund => (
-                    <div key={fund.id} style={styles.portfolioItem}>
-                      <img src={fund.logo} alt={fund.name} style={styles.portfolioItemLogo} />
-                      <div style={styles.portfolioItemDetails}>
-                        <span style={styles.portfolioItemName}>{fund.name}</span>
-                        <span style={styles.portfolioItemSubtext}>Monthly SIP: {formatCurrency(fund.sip)}</span>
+            ) : (() => {
+              const mfTotalValue = (data.mutualFunds || []).reduce((sum, mf) => sum + (mf.currentValue || 0), 0);
+              const mfInvestedValue = (data.mutualFunds || []).reduce((sum, mf) => sum + (mf.investedValue || mf.currentValue || 0), 0);
+              const mfGain = mfTotalValue - mfInvestedValue;
+              const mfReturnPct = mfInvestedValue > 0 ? (mfGain / mfInvestedValue) * 100 : 0;
+              const isMfPositive = mfGain >= 0;
+
+              return (
+                <>
+                  <p style={styles.portfolioTotalValue}>{formatCurrency(mfTotalValue)}</p>
+                  <p style={{
+                    ...styles.portfolioReturn,
+                    color: isMfPositive ? '#28a745' : '#dc3545'
+                  }}>
+                    {isMfPositive ? '+' : ''}{formatPercent(mfReturnPct)} Overall
+                  </p>
+                  <div style={styles.portfolioItems}>
+                    {(data.mutualFunds || []).map(fund => (
+                      <div key={fund.id} style={styles.portfolioItem}>
+                        <img src={fund.logo} alt={fund.name} style={styles.portfolioItemLogo} />
+                        <div style={styles.portfolioItemDetails}>
+                          <span style={styles.portfolioItemName}>{fund.name}</span>
+                          <span style={styles.portfolioItemSubtext}>{fund.sip > 0 ? `Monthly SIP: ${formatCurrency(fund.sip)}` : 'One-Time Holding'}</span>
+                        </div>
+                        <span style={styles.portfolioItemValue}>{formatCurrency(fund.currentValue)}</span>
+                        <span style={{ ...styles.portfolioItemGain, color: fund.gainPercent >= 0 ? '#28a745' : '#dc3545' }}>
+                          {fund.gainPercent >= 0 ? '+' : ''}{formatPercent(fund.gainPercent)}
+                        </span>
                       </div>
-                      <span style={styles.portfolioItemValue}>{formatCurrency(fund.currentValue)}</span>
-                      <span style={{ ...styles.portfolioItemGain, color: fund.gainPercent >= 0 ? '#28a745' : '#dc3545' }}>
-                        {fund.gainPercent >= 0 ? '+' : ''}{formatPercent(fund.gainPercent)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <Link to="/investments" style={styles.viewAllButton}>View All Funds</Link>
-              </>
-            )}
+                    ))}
+                  </div>
+                  <Link to="/investments" style={styles.viewAllButton}>View All Funds</Link>
+                </>
+              );
+            })()}
           </div>
         </div>
 
@@ -466,18 +673,18 @@ const Dashboard = () => {
             ))
           ) : (
             <>
-              <button style={styles.actionButton}>
+              <Link to="/explore" style={{ ...styles.actionButton, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={styles.actionIcon}>💰</span> Add Money
-              </button>
-              <button style={styles.actionButton}>
+              </Link>
+              <Link to="/watchlist" style={{ ...styles.actionButton, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={styles.actionIcon}>📋</span> Watchlist
-              </button>
-              <button style={styles.actionButton}>
+              </Link>
+              <Link to="/ask" style={{ ...styles.actionButton, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={styles.actionIcon}>🙋</span> Ask Expert
-              </button>
-              <button style={styles.actionButton}>
+              </Link>
+              <Link to="/investments" style={{ ...styles.actionButton, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={styles.actionIcon}>📄</span> Reports
-              </button>
+              </Link>
             </>
           )}
         </div>

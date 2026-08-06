@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // Import useCallback
 import { addToWatchlist } from '../services/watchlistService';
-import { getExploreData } from '../services/exploreService'; // Import the new service
+import { addInvestment, getInvestments } from '../services/investmentService';
+import { getExploreData } from '../services/exploreService';
+import styles from './Explore.module.css';
 
 const Explore = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -10,22 +12,81 @@ const Explore = () => {
   const [activeCategory, setActiveCategory] = useState('Mutual Fund');
   const [sortOption, setSortOption] = useState('Sort by Performance');
   const [exploreResults, setExploreResults] = useState([]);
-  const [allExploreData, setAllExploreData] = useState([]); // Store all fetched data
+  const [allExploreData, setAllExploreData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
-  const [isGridView, setIsGridView] = useState(true); // State for view toggle
+  const [isGridView, setIsGridView] = useState(true);
 
-  // Fetch data on component mount
+  // State for Invest Modal
+  const [showInvestModal, setShowInvestModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [investmentAmount, setInvestmentAmount] = useState('');
+  const [stockQuantity, setStockQuantity] = useState(1);
+  const [investmentFrequency, setInvestmentFrequency] = useState('one-time');
+
+  // Helper to map frontend category names (plural) to backend model types (singular) for filtering
+  const mapFrontendCategoryToBackendType = useCallback((category) => {
+    switch (category) {
+      case 'Mutual Funds': return 'Mutual Fund';
+      case 'Stocks': return 'Stock';
+      case 'NFOs': return 'NFO';
+      case 'ETFs': return 'ETF';
+      default: return category;
+    }
+  }, []);
+
+  // Check URL query parameters for category filter
   useEffect(() => {
-    const fetchExploreData = async () => {
+    const params = new URLSearchParams(window.location.search);
+    const categoryParam = params.get('category') || params.get('type');
+    if (categoryParam) {
+      if (categoryParam.toUpperCase() === 'FD' || categoryParam.toUpperCase() === 'FIXED DEPOSIT') {
+        setFilterType('All Types');
+        setActiveCategory('Mutual Fund');
+      } else if (categoryParam.toUpperCase() === 'STOCK' || categoryParam.toUpperCase() === 'STOCKS') {
+        setActiveCategory('Stock');
+      } else if (categoryParam.toUpperCase() === 'MUTUAL FUND' || categoryParam.toUpperCase() === 'MUTUAL FUNDS') {
+        setActiveCategory('Mutual Fund');
+      } else if (categoryParam.toUpperCase() === 'ETF' || categoryParam.toUpperCase() === 'ETFS') {
+        setActiveCategory('ETF');
+      } else if (categoryParam.toUpperCase() === 'NFO' || categoryParam.toUpperCase() === 'NFOS') {
+        setActiveCategory('NFO');
+      }
+    }
+  }, []);
+
+  // Fetch initial data on component mount
+  useEffect(() => {
+    const fetchInitialExploreData = async () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await getExploreData();
-        setAllExploreData(data); // Store the full dataset
+        const [data, userInvs] = await Promise.all([
+          getExploreData(),
+          getInvestments().catch(() => [])
+        ]);
+
+        const investmentsList = userInvs || [];
+
+        // Map invested amounts from user investments onto explore data
+        const enrichedData = data.map(item => {
+          const invMatch = investmentsList.find(i =>
+            (i.symbol && item.symbol && i.symbol.toUpperCase() === item.symbol.toUpperCase()) ||
+            (i.name && item.name && i.name.toLowerCase() === item.name.toLowerCase())
+          );
+          return {
+            ...item,
+            investedValue: invMatch ? (invMatch.investedValue || invMatch.amount || 0) : 0
+          };
+        });
+
+        setAllExploreData(enrichedData);
+
         // Initialize filtered results based on default activeCategory
-        setExploreResults(data.filter(item => item.type === activeCategory));
+        const backendCat = mapFrontendCategoryToBackendType(activeCategory);
+        const initialFiltered = enrichedData.filter(item => item.type === backendCat);
+        setExploreResults(initialFiltered);
       } catch (err) {
         console.error("Error fetching explore data:", err);
         setError("Failed to load investment data. Please try again later.");
@@ -36,33 +97,74 @@ const Explore = () => {
       }
     };
 
-    fetchExploreData();
-  }, []); // Run once on component mount
+    fetchInitialExploreData();
+  }, [activeCategory, mapFrontendCategoryToBackendType]);
+
+  // Real-time SSE price update stream connection
+  useEffect(() => {
+    const eventSource = new EventSource('http://localhost:3001/api/explore/stream');
+
+    eventSource.onmessage = (event) => {
+      try {
+        const updates = JSON.parse(event.data);
+        const updateMap = new Map(updates.map(u => [u.id || u.symbol, u]));
+
+        setAllExploreData(prevData =>
+          prevData.map(item => {
+            const upd = updateMap.get(item._id) || updateMap.get(item.symbol);
+            if (upd) {
+              return {
+                ...item,
+                currentPrice: upd.currentPrice,
+                dayChange: upd.dayChange,
+                isLive: true
+              };
+            }
+            return item;
+          })
+        );
+      } catch (err) {
+        console.error('Error parsing SSE stream message:', err);
+      }
+    };
+
+    eventSource.onerror = (err) => {
+      console.error('SSE Stream connection error:', err);
+      eventSource.close();
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, []);
 
   // Apply filters and sorting whenever dependencies change
   useEffect(() => {
     if (loading || error) {
-      return; // Do not filter/sort if still loading or in error state
+      return;
     }
 
-    let currentFilteredData = allExploreData;
+    let currentFilteredData = [...allExploreData];
 
     // Filter by active category tab
-    if (activeCategory !== 'All') { // Assuming 'All' would be an option if you want to show everything
-      currentFilteredData = currentFilteredData.filter(item => item.type === activeCategory);
+    const backendActiveCategory = mapFrontendCategoryToBackendType(activeCategory);
+    if (backendActiveCategory !== 'All') {
+      currentFilteredData = currentFilteredData.filter(item => item.type === backendActiveCategory);
     }
 
     // Filter by search term
     if (searchTerm) {
       currentFilteredData = currentFilteredData.filter(item =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.symbol && item.symbol.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (item.subType && item.subType.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
-    // Filter by selected type (from dropdown)
-    if (filterType !== 'All Types') {
-      currentFilteredData = currentFilteredData.filter(item => item.type === filterType);
+    // Filter by selected type
+    const backendFilterType = mapFrontendCategoryToBackendType(filterType);
+    if (backendFilterType !== 'All Types') {
+      currentFilteredData = currentFilteredData.filter(item => item.type === backendFilterType);
     }
 
     // Filter by risk level
@@ -70,176 +172,364 @@ const Explore = () => {
       currentFilteredData = currentFilteredData.filter(item => item.risk === filterRisk);
     }
 
-    // Filter by CAGR (for Mutual Funds)
+    // Filter by CAGR/Return
     if (filterCAGR !== 'CAGR %') {
+      const minReturn = parseFloat(filterCAGR.replace('%+', ''));
       currentFilteredData = currentFilteredData.filter(item => {
-        if (item.type === 'Mutual Funds' && item.oneYearCAGR) {
-          const cagrValue = parseFloat(item.oneYearCAGR.replace('%', ''));
-          const minCagr = parseFloat(filterCAGR.replace('%+', ''));
-          return cagrValue >= minCagr;
+        let itemReturn = 0;
+        if (item.type === 'Mutual Fund' || item.type === 'ETF' || item.type === 'Stock') {
+          itemReturn = item.oneYearReturn || 0;
         }
-        return true; // Don't filter other types by CAGR
+        return itemReturn >= minReturn;
       });
     }
 
     // Apply sorting
     currentFilteredData.sort((a, b) => {
       if (sortOption === 'Sort by Performance') {
-        // Handle different performance metrics based on type
         const getPerformance = (item) => {
-          if (item.type === 'Mutual Fund' && item.oneYearCAGR) return parseFloat(item.oneYearCAGR.replace('%', ''));
-          if (item.type === 'Stock' && item.oneYearReturn) return parseFloat(item.oneYearReturn.replace('%', ''));
-          if (item.type === 'ETF' && item.oneYearReturn) return parseFloat(item.oneYearReturn.replace('%', ''));
-          return 0; // Default to 0 if no relevant performance metric
+          if (item.type === 'Mutual Fund' || item.type === 'ETF' || item.type === 'Stock') return item.oneYearReturn || 0;
+          return 0;
         };
-        return getPerformance(b) - getPerformance(a); // Descending performance
+        return getPerformance(b) - getPerformance(a);
       } else if (sortOption === 'Sort by Name (A-Z)') {
         return a.name.localeCompare(b.name);
+      } else if (sortOption === 'Price: Low to High') {
+        return (parseFloat(a.currentPrice) || 0) - (parseFloat(b.currentPrice) || 0);
+      } else if (sortOption === 'Price: High to Low') {
+        return (parseFloat(b.currentPrice) || 0) - (parseFloat(a.currentPrice) || 0);
       }
-      // Add other sorting logic (e.g., AUM, if data is available)
       return 0;
     });
 
     setExploreResults(currentFilteredData);
-  }, [searchTerm, filterType, filterCAGR, filterRisk, activeCategory, sortOption, allExploreData, loading, error]);
+  }, [searchTerm, filterType, filterCAGR, filterRisk, activeCategory, sortOption, allExploreData, loading, error, mapFrontendCategoryToBackendType]);
 
 
   const handleAddToWatchlist = async (item) => {
+    setMessage('');
     try {
-      // Assuming watchlistService.js is correctly set up with direct import or backend call
-      // You might need to adjust the item structure sent to watchlistService
-      await addToWatchlist(item);
-      setMessage(`'${item.name}' added to watchlist! ✅`);
+      const itemToSend = {
+        symbol: item.symbol,
+        name: item.name,
+        type: item.type,
+        subType: item.subType,
+        risk: item.risk,
+        currentPrice: item.currentPrice,
+        dayChange: item.dayChange,
+        oneYearReturn: item.oneYearReturn,
+        threeYearReturn: item.threeYearReturn,
+        fiveYearReturn: item.fiveYearReturn,
+        logo: item.logo,
+        trendData: item.trendData || []
+      };
+      await addToWatchlist(itemToSend);
+      setMessage(`'${item.name}' added to watchlist successfully! ✅`);
     } catch (err) {
       console.error("Failed to add to watchlist:", err);
-      setMessage("Failed to add to watchlist.");
+      setMessage(`Failed to add to watchlist: ${err.message}`);
     }
     setTimeout(() => setMessage(''), 3000);
   };
 
-  const handleAddToPortfolio = (item) => {
-    setMessage(`'${item.name}' added to portfolio (simulated)!`);
-    console.log('Add to portfolio:', item);
-    // In a real app, you'd send this to a backend service to update the user's portfolio
-    setTimeout(() => setMessage(''), 3000);
+  // Invest Modal Handlers
+  const handleOpenInvestModal = (item) => {
+    setSelectedItem(item);
+    setShowInvestModal(true);
+    setInvestmentAmount('');
+    setStockQuantity(1);
+    setInvestmentFrequency('one-time');
+    setMessage('');
+  };
+
+  const handleCloseInvestModal = () => {
+    setTimeout(() => {
+      setShowInvestModal(false);
+      setSelectedItem(null);
+    }, 50);
+  };
+
+  const handleInvest = async () => {
+    if (!selectedItem) return;
+
+    setMessage('');
+    try {
+      let validObjectType = selectedItem.type;
+      if (validObjectType === 'Mutual Funds') validObjectType = 'Mutual Fund';
+      if (validObjectType === 'Stocks') validObjectType = 'Stock';
+      if (validObjectType === 'ETFs') validObjectType = 'ETF';
+      if (validObjectType === 'NFOs') validObjectType = 'NFO';
+
+      const isStockOrETF = validObjectType === 'Stock' || validObjectType === 'ETF';
+
+      if (isStockOrETF) {
+        const qty = parseInt(stockQuantity, 10);
+        if (!qty || qty <= 0) {
+          setMessage('Please enter a valid quantity (at least 1 share/unit).');
+          return;
+        }
+
+        const currentPrice = parseFloat(selectedItem.currentPrice) || 100;
+        const totalPayable = qty * currentPrice;
+
+        const investmentData = {
+          name: selectedItem.name,
+          type: validObjectType,
+          symbol: selectedItem.symbol || selectedItem.name.substring(0, 5).toUpperCase(),
+          amount: totalPayable,
+          quantity: qty,
+          frequency: 'one-time',
+          investedValue: totalPayable,
+          marketValue: totalPayable,
+          logo: selectedItem.logo,
+          purchaseDate: new Date().toISOString()
+        };
+
+        await addInvestment(investmentData);
+        setMessage(`Successfully purchased ${qty} ${qty === 1 ? 'share/unit' : 'shares/units'} of ${selectedItem.name} for ₹${totalPayable.toLocaleString('en-IN')}! 🎉`);
+        handleCloseInvestModal();
+      } else {
+        if (!investmentAmount || isNaN(investmentAmount) || parseFloat(investmentAmount) <= 0) {
+          setMessage('Please enter a valid investment amount.');
+          return;
+        }
+
+        const amt = parseFloat(investmentAmount);
+        const unitNav = parseFloat(selectedItem.currentPrice) || parseFloat(selectedItem.nav) || 50;
+        const purchasedUnits = parseFloat((amt / unitNav).toFixed(4));
+
+        const investmentData = {
+          name: selectedItem.name,
+          type: validObjectType || 'Mutual Fund',
+          symbol: selectedItem.symbol || selectedItem.name.substring(0, 5).toUpperCase(),
+          amount: unitNav,
+          quantity: purchasedUnits,
+          frequency: investmentFrequency,
+          investedValue: amt,
+          marketValue: amt,
+          logo: selectedItem.logo,
+          purchaseDate: new Date().toISOString()
+        };
+
+        await addInvestment(investmentData);
+        setMessage(`Successfully invested ₹${amt.toLocaleString('en-IN')} in ${selectedItem.name} (${purchasedUnits} units at NAV ₹${unitNav.toFixed(2)})! 🎉`);
+        handleCloseInvestModal();
+      }
+    } catch (err) {
+      console.error("Failed to add to portfolio:", err);
+      setMessage(`Failed to invest in ${selectedItem.name}: ${err.message}`);
+    }
+    setTimeout(() => setMessage(''), 3500);
+  };
+
+  // Helper to render card details cleanly
+  const renderCardDetails = (item, isGrid) => {
+    const investedText = (item.investedValue && item.investedValue > 0) ? `₹${item.investedValue.toLocaleString('en-IN')}` : '₹0';
+
+    if (isGrid) {
+      if (item.type === 'Mutual Fund') {
+        return (
+          <div className={styles.cardDetailsGrid}>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>Market Value</span><span className={styles.detailValue}>₹{item.currentPrice?.toLocaleString('en-IN')}</span></div>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>Invested</span><span className={styles.detailValue}>{investedText}</span></div>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>1Y CAGR</span><span className={styles.detailValue}>{item.oneYearReturn?.toFixed(2)}%</span></div>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>3Y CAGR</span><span className={styles.detailValue}>{item.threeYearReturn?.toFixed(2)}%</span></div>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>5Y CAGR</span><span className={styles.detailValue}>{item.fiveYearReturn?.toFixed(2)}%</span></div>
+          </div>
+        );
+      } else if (item.type === 'Stock') {
+        return (
+          <div className={styles.cardDetailsGrid}>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>Current Price</span><span className={styles.detailValue}>₹{item.currentPrice?.toLocaleString('en-IN')}</span></div>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>Invested</span><span className={styles.detailValue}>{investedText}</span></div>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>Day Change</span><span className={`${styles.detailValue} ${parseFloat(item.dayChange) >= 0 ? styles.positiveChange : styles.negativeChange}`}>{item.dayChange >= 0 ? '+' : ''}{item.dayChange?.toFixed(2)}%</span></div>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>1Y Return</span><span className={styles.detailValue}>{item.oneYearReturn?.toFixed(2)}%</span></div>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>3Y Return</span><span className={styles.detailValue}>{item.threeYearReturn?.toFixed(2)}%</span></div>
+          </div>
+        );
+      } else if (item.type === 'NFO') {
+        return (
+          <div className={styles.cardDetailsGrid}>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>Issue Price</span><span className={styles.detailValue}>₹{item.currentPrice?.toLocaleString('en-IN')}</span></div>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>Invested</span><span className={styles.detailValue}>{investedText}</span></div>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>Open Date</span><span className={styles.detailValue}>{item.openDate || 'N/A'}</span></div>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>Close Date</span><span className={styles.detailValue}>{item.closeDate || 'N/A'}</span></div>
+          </div>
+        );
+      } else if (item.type === 'ETF') {
+        return (
+          <div className={styles.cardDetailsGrid}>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>Current Price</span><span className={styles.detailValue}>₹{item.currentPrice?.toLocaleString('en-IN')}</span></div>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>Invested</span><span className={styles.detailValue}>{investedText}</span></div>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>Day Change</span><span className={`${styles.detailValue} ${parseFloat(item.dayChange) >= 0 ? styles.positiveChange : styles.negativeChange}`}>{item.dayChange >= 0 ? '+' : ''}{item.dayChange?.toFixed(2)}%</span></div>
+            <div className={styles.detailItem}><span className={styles.detailLabel}>Expense Ratio</span><span className={styles.detailValue}>{item.expenseRatio || 'N/A'}</span></div>
+          </div>
+        );
+      }
+      return null;
+    } else {
+      if (item.type === 'Mutual Fund') {
+        return (
+          <div className={styles.listItemDetails}>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>Market Value</span><span className={styles.detailValue}>₹{item.currentPrice?.toLocaleString('en-IN')}</span></div>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>Invested</span><span className={styles.detailValue}>{investedText}</span></div>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>1Y CAGR</span><span className={styles.detailValue}>{item.oneYearReturn?.toFixed(2)}%</span></div>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>3Y CAGR</span><span className={styles.detailValue}>{item.threeYearReturn?.toFixed(2)}%</span></div>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>5Y CAGR</span><span className={styles.detailValue}>{item.fiveYearReturn?.toFixed(2)}%</span></div>
+          </div>
+        );
+      } else if (item.type === 'Stock') {
+        return (
+          <div className={styles.listItemDetails}>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>Current Price</span><span className={styles.detailValue}>₹{item.currentPrice?.toLocaleString('en-IN')}</span></div>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>Invested</span><span className={styles.detailValue}>{investedText}</span></div>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>Day Change</span><span className={`${styles.detailValue} ${parseFloat(item.dayChange) >= 0 ? styles.positiveChange : styles.negativeChange}`}>{item.dayChange >= 0 ? '+' : ''}{item.dayChange?.toFixed(2)}%</span></div>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>1Y Return</span><span className={styles.detailValue}>{item.oneYearReturn?.toFixed(2)}%</span></div>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>3Y Return</span><span className={styles.detailValue}>{item.threeYearReturn?.toFixed(2)}%</span></div>
+          </div>
+        );
+      } else if (item.type === 'NFO') {
+        return (
+          <div className={styles.listItemDetails}>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>Issue Price</span><span className={styles.detailValue}>₹{item.currentPrice?.toLocaleString('en-IN')}</span></div>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>Invested</span><span className={styles.detailValue}>{investedText}</span></div>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>Open Date</span><span className={styles.detailValue}>{item.openDate || 'N/A'}</span></div>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>Close Date</span><span className={styles.detailValue}>{item.closeDate || 'N/A'}</span></div>
+          </div>
+        );
+      } else if (item.type === 'ETF') {
+        return (
+          <div className={styles.listItemDetails}>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>Current Price</span><span className={styles.detailValue}>₹{item.currentPrice?.toLocaleString('en-IN')}</span></div>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>Invested</span><span className={styles.detailValue}>{investedText}</span></div>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>Day Change</span><span className={`${styles.detailValue} ${parseFloat(item.dayChange) >= 0 ? styles.positiveChange : styles.negativeChange}`}>{item.dayChange >= 0 ? '+' : ''}{item.dayChange?.toFixed(2)}%</span></div>
+            <div className={styles.listItemDetailColumn}><span className={styles.detailLabel}>Expense Ratio</span><span className={styles.detailValue}>{item.expenseRatio || 'N/A'}</span></div>
+          </div>
+        );
+      }
+      return null;
+    }
   };
 
   return (
-    <div style={styles.pageContainer}>
-      <div style={styles.contentWrapper}>
-        <div style={styles.exploreHeader}>
-          <h1 style={styles.exploreTitle}>Explore Investments</h1>
-          <p style={styles.exploreSubtitle}>Discover stocks, mutual funds, and investment opportunities</p>
+    <div className={styles.pageContainer}>
+      <div className={styles.contentWrapper}>
+        <div className={styles.exploreHeader}>
+          <h1 className={styles.exploreTitle}>Explore Investments</h1>
+          <p className={styles.exploreSubtitle}>Discover stocks, mutual funds, and investment opportunities</p>
         </div>
 
-        {error && <p style={styles.errorMessage}>{error}</p>}
+        {error && <p className={styles.errorMessage}>{error}</p>}
 
-        {/* Search and Filter Bar */}
-        <div style={styles.filterBar}>
-          {loading ? (
-            <>
-              <div style={styles.skeletonSearchBox}>
-                <span style={styles.searchIcon}>🔍</span>
-                <div style={styles.skeletonInput}></div>
-              </div>
-              <div style={styles.skeletonSelect}></div>
-              <div style={styles.skeletonSelect}></div>
-              <div style={styles.skeletonSelect}></div>
-              <div style={styles.skeletonButton}></div>
-            </>
-          ) : (
-            <>
-              <div style={styles.searchBox}>
-                <span style={styles.searchIcon}>🔍</span>
-                <input
-                  type="text"
-                  placeholder="Search stocks, mutual funds..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={styles.searchInput}
-                />
-              </div>
-              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} style={styles.filterSelect}>
-                <option>All Types</option>
-                <option>Mutual Funds</option>
-                <option>Stocks</option>
-                <option>ETFs</option>
-                <option>NFOs</option>
-                {/* <option>NPS</option> // NPS is not in your explore.json, consider adding if needed */}
-              </select>
-              <select value={filterCAGR} onChange={(e) => setFilterCAGR(e.target.value)} style={styles.filterSelect}>
-                <option>CAGR %</option>
-                <option>5%+</option>
-                <option>10%+</option>
-                <option>15%+</option>
-              </select>
-              <select value={filterRisk} onChange={(e) => setFilterRisk(e.target.value)} style={styles.filterSelect}>
-                <option>Risk Level</option>
-                <option>Low Risk</option>
-                <option>Medium Risk</option>
-                <option>High Risk</option>
-              </select>
-              <button style={styles.filterButton}>Filter</button>
-            </>
-          )}
+        {/* Sticky Filter & Category Header Section */}
+        <div className={styles.stickyFilterSection}>
+          {/* Filter Bar */}
+          <div className={styles.filterBar}>
+            {loading ? (
+              <>
+                <div className={styles.searchBox}>
+                  <span className={styles.searchIcon}>🔍</span>
+                  <div className={styles.skeletonInput}></div>
+                </div>
+                <div className={styles.skeletonSelect}></div>
+                <div className={styles.skeletonSelect}></div>
+                <div className={styles.skeletonSelect}></div>
+                <div className={styles.skeletonButton}></div>
+              </>
+            ) : (
+              <>
+                <div className={styles.searchBox}>
+                  <span className={styles.searchIcon}>🔍</span>
+                  <input
+                    type="text"
+                    placeholder="Search stocks, mutual funds..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className={styles.searchInput}
+                  />
+                </div>
+                <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className={styles.filterSelect}>
+                  <option>All Types</option>
+                  <option>Mutual Fund</option>
+                  <option>Stock</option>
+                  <option>ETF</option>
+                  <option>NFO</option>
+                </select>
+                <select value={filterCAGR} onChange={(e) => setFilterCAGR(e.target.value)} className={styles.filterSelect}>
+                  <option>CAGR %</option>
+                  <option>5%+</option>
+                  <option>10%+</option>
+                  <option>15%+</option>
+                </select>
+                <select value={filterRisk} onChange={(e) => setFilterRisk(e.target.value)} className={styles.filterSelect}>
+                  <option>Risk Level</option>
+                  <option>Low Risk</option>
+                  <option>Medium Risk</option>
+                  <option>High Risk</option>
+                </select>
+                <button className={styles.filterButton}>Filter</button>
+              </>
+            )}
+          </div>
+
+          {/* Category Tabs */}
+          <div className={styles.categoryTabs}>
+            {loading ? (
+              [1, 2, 3, 4].map(i => (
+                <div key={i} className={styles.skeletonTabButton}></div>
+              ))
+            ) : (
+              <>
+                <button
+                  className={activeCategory === 'Mutual Fund' ? styles.activeTab : styles.tabButton}
+                  onClick={() => setActiveCategory('Mutual Fund')}
+                >
+                  Mutual Funds
+                </button>
+                <button
+                  className={activeCategory === 'Stock' ? styles.activeTab : styles.tabButton}
+                  onClick={() => setActiveCategory('Stock')}
+                >
+                  Stocks
+                </button>
+                <button
+                  className={activeCategory === 'NFO' ? styles.activeTab : styles.tabButton}
+                  onClick={() => setActiveCategory('NFO')}
+                >
+                  NFOs
+                </button>
+                <button
+                  className={activeCategory === 'ETF' ? styles.activeTab : styles.tabButton}
+                  onClick={() => setActiveCategory('ETF')}
+                >
+                  ETFs
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Category Tabs */}
-        <div style={styles.categoryTabs}>
-          {loading ? (
-            [1, 2, 3, 4].map(i => (
-              <div key={i} style={styles.skeletonTabButton}></div>
-            ))
-          ) : (
-            <>
-              <button
-                style={activeCategory === 'Mutual Funds' ? styles.activeTab : styles.tabButton}
-                onClick={() => setActiveCategory('Mutual Fund')}
-              >
-                Mutual Funds
-              </button>
-              <button
-                style={activeCategory === 'Stocks' ? styles.activeTab : styles.tabButton}
-                onClick={() => setActiveCategory('Stock')}
-              >
-                Stocks
-              </button>
-              <button
-                style={activeCategory === 'NFOs' ? styles.activeTab : styles.tabButton}
-                onClick={() => setActiveCategory('NFO')}
-              >
-                NFOs
-              </button>
-              <button
-                style={activeCategory === 'ETFs' ? styles.activeTab : styles.tabButton}
-                onClick={() => setActiveCategory('ETF')}
-              >
-                ETFs
-              </button>
-            </>
-          )}
-        </div>
-
-        {message && <p style={styles.message}>{message}</p>}
+        {message && <p className={`${styles.message} ${message.includes('successfully') ? styles.success : styles.error}`}>{message}</p>}
 
         {/* Results Header */}
-        <div style={styles.resultsHeader}>
+        <div className={styles.resultsHeader}>
           {loading ? (
             <>
-              <div style={styles.skeletonTextMedium}></div>
-              <div style={styles.skeletonSelect}></div>
-              <div style={styles.skeletonToggleViewButton}></div>
+              <div className={styles.skeletonTextMedium}></div>
+              <div className={styles.skeletonSelect}></div>
+              <div className={styles.skeletonToggleViewButton}></div>
             </>
           ) : (
             <>
-              <span style={styles.resultsCount}>{exploreResults.length} Results</span>
-              <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} style={styles.sortSelect}>
+              <span className={styles.resultsCount}>{exploreResults.length} Results</span>
+              <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className={styles.sortSelect}>
                 <option>Sort by Performance</option>
                 <option>Sort by Name (A-Z)</option>
-                {/* Add more sorting options like 'Sort by AUM' if AUM data is available */}
+                <option>Price: Low to High</option>
+                <option>Price: High to Low</option>
               </select>
               {/* Grid/List Toggle Button */}
-              <button onClick={() => setIsGridView(!isGridView)} style={styles.toggleViewButton}>
+              <button onClick={() => setIsGridView(!isGridView)} className={styles.toggleViewButton}>
                 {isGridView ? '☰' : '▦'}
               </button>
             </>
@@ -248,779 +538,194 @@ const Explore = () => {
 
         {/* Investment Cards Grid/List */}
         {loading ? (
-          <div style={isGridView ? styles.investmentCardsGrid : styles.investmentCardsList}>
-            {[1, 2, 3, 4].map(i => ( // Render multiple skeleton cards
-              <div key={i} style={isGridView ? styles.skeletonInvestmentCardGrid : styles.skeletonInvestmentCardList}>
+          <div className={isGridView ? styles.investmentCardsGrid : styles.investmentCardsList}>
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className={isGridView ? styles.skeletonInvestmentCardGrid : styles.skeletonInvestmentCardList}>
                 {/* Skeleton for common header */}
-                <div style={isGridView ? styles.skeletonCardHeader : styles.skeletonListItemHeader}>
-                  <div style={styles.skeletonCircle}></div>
-                  <div style={styles.skeletonTextGroup}>
-                    <div style={styles.skeletonTextMedium}></div>
-                    <div style={styles.skeletonTextSmall}></div>
+                <div className={isGridView ? styles.skeletonCardHeader : styles.skeletonListItemHeader}>
+                  <div className={styles.skeletonCircle}></div>
+                  <div className={styles.skeletonTextGroup}>
+                    <div className={styles.skeletonTextMedium}></div>
+                    <div className={styles.skeletonTextSmall}></div>
                   </div>
-                  <div style={styles.skeletonRiskTag}></div>
+                  <div className={styles.skeletonRiskTag}></div>
                 </div>
 
                 {/* Skeleton for details (dynamic based on view) */}
                 {isGridView ? (
-                  <div style={styles.skeletonCardDetailsGrid}>
-                    <div style={styles.skeletonDetailItem}>
-                      <div style={styles.skeletonTextSmall}></div>
-                      <div style={styles.skeletonTextMedium}></div>
+                  <div className={styles.skeletonCardDetailsGrid}>
+                    <div className={styles.skeletonDetailItem}>
+                      <div className={styles.skeletonTextSmall}></div>
+                      <div className={styles.skeletonTextMedium}></div>
                     </div>
-                    <div style={styles.skeletonDetailItem}>
-                      <div style={styles.skeletonTextSmall}></div>
-                      <div style={styles.skeletonTextMedium}></div>
+                    <div className={styles.skeletonDetailItem}>
+                      <div className={styles.skeletonTextSmall}></div>
+                      <div className={styles.skeletonTextMedium}></div>
                     </div>
-                    <div style={styles.skeletonDetailItem}>
-                      <div style={styles.skeletonTextSmall}></div>
-                      <div style={styles.skeletonTextMedium}></div>
+                    <div className={styles.skeletonDetailItem}>
+                      <div className={styles.skeletonTextSmall}></div>
+                      <div className={styles.skeletonTextMedium}></div>
                     </div>
                   </div>
                 ) : (
-                  <div style={styles.skeletonListItemDetails}>
-                    <div style={styles.skeletonDetailItem}>
-                      <div style={styles.skeletonTextSmall}></div>
-                      <div style={styles.skeletonTextMedium}></div>
+                  <div className={styles.skeletonListItemDetails}>
+                    <div className={styles.skeletonDetailItem}>
+                      <div className={styles.skeletonTextSmall}></div>
+                      <div className={styles.skeletonTextMedium}></div>
                     </div>
-                    <div style={styles.skeletonDetailItem}>
-                      <div style={styles.skeletonTextSmall}></div>
-                      <div style={styles.skeletonTextMedium}></div>
+                    <div className={styles.skeletonDetailItem}>
+                      <div className={styles.skeletonTextSmall}></div>
+                      <div className={styles.skeletonTextMedium}></div>
                     </div>
-                    <div style={styles.skeletonDetailItem}>
-                      <div style={styles.skeletonTextSmall}></div>
-                      <div style={styles.skeletonTextMedium}></div>
+                    <div className={styles.skeletonDetailItem}>
+                      <div className={styles.skeletonTextSmall}></div>
+                      <div className={styles.skeletonTextMedium}></div>
                     </div>
-                    <div style={styles.skeletonDetailItem}>
-                      <div style={styles.skeletonTextSmall}></div>
-                      <div style={styles.skeletonTextMedium}></div>
+                    <div className={styles.skeletonDetailItem}>
+                      <div className={styles.skeletonTextSmall}></div>
+                      <div className={styles.skeletonTextMedium}></div>
                     </div>
                   </div>
                 )}
 
                 {/* Skeleton for actions */}
-                <div style={isGridView ? styles.skeletonCardActions : styles.skeletonListItemActions}>
-                  <div style={styles.skeletonButtonSmall}></div>
-                  <div style={styles.skeletonButtonSmall}></div>
+                <div className={isGridView ? styles.skeletonCardActions : styles.skeletonListItemActions}>
+                  <div className={styles.skeletonButtonSmall}></div>
+                  <div className={styles.skeletonButtonSmall}></div>
                 </div>
               </div>
             ))}
           </div>
         ) : exploreResults.length === 0 ? (
-          <p style={styles.noResultsMessage}>No investments found matching your criteria.</p>
+          <p className={styles.noResultsMessage}>No investments found matching your criteria.</p>
         ) : (
-          <div style={isGridView ? styles.investmentCardsGrid : styles.investmentCardsList}>
+          <div className={isGridView ? styles.investmentCardsGrid : styles.investmentCardsList}>
             {exploreResults.map(item => (
-              <div key={item.id} style={isGridView ? styles.investmentCard : styles.investmentListItem}>
+              <div key={item._id} className={isGridView ? styles.investmentCard : styles.investmentListItem}>
                 {/* Common header for both views */}
-                <div style={isGridView ? styles.cardHeader : styles.listItemHeader}>
-                  <img src={item.logo} alt={`${item.name} Logo`} style={styles.cardLogo} />
-                  <div style={styles.listItemNameAndSubtype}>
-                    <h3 style={styles.cardTitle}>{item.name}</h3>
-                    <p style={styles.cardSubtitle}>{item.subType}</p>
+                <div className={isGridView ? styles.cardHeader : styles.listItemHeader}>
+                  <img
+                    src={item.logo || `https://placehold.co/40x40/FF7F27/white?text=${item.symbol ? item.symbol.substring(0, 4).toUpperCase() : 'N/A'}`}
+                    alt={`${item.name} Logo`}
+                    className={styles.cardLogo}
+                    onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/40x40/FF7F27/white?text=${item.symbol ? item.symbol.substring(0, 4).toUpperCase() : 'N/A'}`; }}
+                  />
+                  <div className={styles.listItemNameAndSubtype}>
+                    <h3 className={styles.cardTitle}>{item.name}</h3>
+                    <p className={styles.cardSubtitle}>{item.subType}</p>
                   </div>
-                  <span style={{ ...styles.riskTag, backgroundColor: item.risk === 'Low Risk' ? '#d4edda' : item.risk === 'Medium Risk' ? '#fff3cd' : '#f8d7da', color: item.risk === 'Low Risk' ? '#155724' : item.risk === 'Medium Risk' ? '#856404' : '#721c24' }}>
+                  <span className={`${styles.riskTag} ${item.risk === 'Low Risk' ? styles.lowRisk : item.risk === 'Medium Risk' ? styles.mediumRisk : styles.highRisk}`}>
                     {item.risk}
                   </span>
                 </div>
 
-                {/* Dynamic content based on type (Mutual Fund vs. Stock vs. NFO vs. ETF) */}
-                {isGridView ? ( // Grid View Details
-                  item.type === 'Mutual Funds' ? (
-                    <div style={styles.cardDetailsGrid}>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>Market Value</span>
-                        <span style={styles.detailValue}>{item.marketValue}</span>
-                      </div>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>Invested</span>
-                        <span style={styles.detailValue}>{item.investedValue}</span>
-                      </div>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>1Y CAGR</span>
-                        <span style={styles.detailValue}>{item.oneYearCAGR}</span>
-                      </div>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>3Y CAGR</span>
-                        <span style={styles.detailValue}>{item.threeYearCAGR}</span>
-                      </div>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>5Y CAGR</span>
-                        <span style={styles.detailValue}>{item.fiveYearCAGR}</span>
-                      </div>
-                    </div>
-                  ) : item.type === 'Stocks' ? (
-                    <div style={styles.cardDetailsGrid}>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>Current Price</span>
-                        <span style={styles.detailValue}>{item.currentPrice}</span>
-                      </div>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>Day Change</span>
-                        <span style={{ ...styles.detailValue, color: parseFloat(item.dayChange) >= 0 ? '#28a745' : '#dc3545' }}>{item.dayChange}</span>
-                      </div>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>1Y Return</span>
-                        <span style={styles.detailValue}>{item.oneYearReturn}</span>
-                      </div>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>3Y Return</span>
-                        <span style={styles.detailValue}>{item.threeYearReturn}</span>
-                      </div>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>5Y Return</span>
-                        <span style={styles.detailValue}>{item.fiveYearReturn}</span>
-                      </div>
-                    </div>
-                  ) : item.type === 'NFOs' ? (
-                    <div style={styles.cardDetailsGrid}>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>Issue Price</span>
-                        <span style={styles.detailValue}>{item.issuePrice}</span>
-                      </div>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>Open Date</span>
-                        <span style={styles.detailValue}>{item.openDate}</span>
-                      </div>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>Close Date</span>
-                        <span style={styles.detailValue}>{item.closeDate}</span>
-                      </div>
-                    </div>
-                  ) : item.type === 'ETFs' ? (
-                    <div style={styles.cardDetailsGrid}>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>Current Price</span>
-                        <span style={styles.detailValue}>{item.currentPrice}</span>
-                      </div>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>Day Change</span>
-                        <span style={{ ...styles.detailValue, color: parseFloat(item.dayChange) >= 0 ? '#28a745' : '#dc3545' }}>{item.dayChange}</span>
-                      </div>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>Expense Ratio</span>
-                        <span style={styles.detailValue}>{item.expenseRatio}</span>
-                      </div>
-                    </div>
-                  ) : null
-                ) : ( // List View Details - New Structure
-                  <div style={styles.listItemDetails}>
-                    {item.type === 'Mutual Funds' ? (
-                      <>
-                        <div style={styles.listItemDetailColumn}>
-                          <span style={styles.detailLabel}>Market Value</span>
-                          <span style={styles.detailValue}>{item.marketValue}</span>
-                        </div>
-                        <div style={styles.listItemDetailColumn}>
-                          <span style={styles.detailLabel}>Invested</span>
-                          <span style={styles.detailValue}>{item.investedValue}</span>
-                        </div>
-                        <div style={styles.listItemDetailColumn}>
-                          <span style={styles.detailLabel}>1Y CAGR</span>
-                          <span style={styles.detailValue}>{item.oneYearCAGR}</span>
-                        </div>
-                        <div style={styles.listItemDetailColumn}>
-                          <span style={styles.detailLabel}>3Y CAGR</span>
-                          <span style={styles.detailValue}>{item.threeYearCAGR}</span>
-                        </div>
-                        <div style={styles.listItemDetailColumn}>
-                          <span style={styles.detailLabel}>5Y CAGR</span>
-                          <span style={styles.detailValue}>{item.fiveYearCAGR}</span>
-                        </div>
-                      </>
-                    ) : item.type === 'Stocks' ? (
-                      <>
-                        <div style={styles.listItemDetailColumn}>
-                          <span style={styles.detailLabel}>Current Price</span>
-                          <span style={styles.detailValue}>{item.currentPrice}</span>
-                        </div>
-                        <div style={styles.listItemDetailColumn}>
-                          <span style={styles.detailLabel}>Day Change</span>
-                          <span style={{ ...styles.detailValue, color: parseFloat(item.dayChange) >= 0 ? '#28a745' : '#dc3545' }}>{item.dayChange}</span>
-                        </div>
-                        <div style={styles.listItemDetailColumn}>
-                          <span style={styles.detailLabel}>1Y Return</span>
-                          <span style={styles.detailValue}>{item.oneYearReturn}</span>
-                        </div>
-                        <div style={styles.listItemDetailColumn}>
-                          <span style={styles.detailLabel}>3Y Return</span>
-                          <span style={styles.detailValue}>{item.threeYearReturn}</span>
-                        </div>
-                        <div style={styles.listItemDetailColumn}>
-                          <span style={styles.detailLabel}>5Y Return</span>
-                          <span style={styles.detailValue}>{item.fiveYearReturn}</span>
-                        </div>
-                      </>
-                    ) : item.type === 'NFOs' ? (
-                      <>
-                        <div style={styles.listItemDetailColumn}>
-                          <span style={styles.detailLabel}>Issue Price</span>
-                          <span style={styles.detailValue}>{item.issuePrice}</span>
-                        </div>
-                        <div style={styles.listItemDetailColumn}>
-                          <span style={styles.detailLabel}>Open Date</span>
-                          <span style={styles.detailValue}>{item.openDate}</span>
-                        </div>
-                        <div style={styles.listItemDetailColumn}>
-                          <span style={styles.detailLabel}>Close Date</span>
-                          <span style={styles.detailValue}>{item.closeDate}</span>
-                        </div>
-                      </>
-                    ) : item.type === 'ETFs' ? (
-                      <>
-                        <div style={styles.listItemDetailColumn}>
-                          <span style={styles.detailLabel}>Current Price</span>
-                          <span style={styles.detailValue}>{item.currentPrice}</span>
-                        </div>
-                        <div style={styles.listItemDetailColumn}>
-                          <span style={styles.detailLabel}>Day Change</span>
-                          <span style={{ ...styles.detailValue, color: parseFloat(item.dayChange) >= 0 ? '#28a745' : '#dc3545' }}>{item.dayChange}</span>
-                        </div>
-                        <div style={styles.listItemDetailColumn}>
-                          <span style={styles.detailLabel}>Expense Ratio</span>
-                          <span style={styles.detailValue}>{item.expenseRatio}</span>
-                        </div>
-                      </>
-                    ) : null}
-                  </div>
-                )}
+                {renderCardDetails(item, isGridView)}
 
                 {/* Actions for both views */}
-                <div style={isGridView ? styles.cardActions : styles.listItemActions}>
-                  <button onClick={() => handleAddToWatchlist(item)} style={styles.addToWatchlistButton}>Add to Watchlist</button>
-                  <button onClick={() => handleAddToPortfolio(item)} style={styles.addToButton}>Add to</button>
+                <div className={isGridView ? styles.cardActions : styles.listItemActions}>
+                  <button onClick={() => handleAddToWatchlist(item)} className={styles.addToWatchlistButton}>Add to Watchlist</button>
+                  <button onClick={() => handleOpenInvestModal(item)} className={styles.addToButton}>Invest</button>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Invest Modal JSX */}
+      {showInvestModal && selectedItem && (() => {
+        const isStockOrETF = selectedItem.type === 'Stock' || selectedItem.type === 'Stocks' || selectedItem.type === 'ETF' || selectedItem.type === 'ETFs';
+        const pricePerUnit = parseFloat(selectedItem.currentPrice) || 0;
+        const currentQty = parseInt(stockQuantity, 10) || 0;
+        const totalPricePayable = currentQty * pricePerUnit;
+
+        return (
+          <div className={styles.modalOverlay}>
+            <div className={styles.modalContent}>
+              <h2 className={styles.modalTitle}>
+                {isStockOrETF ? `Buy ${selectedItem.name}` : `Invest in ${selectedItem.name}`}
+              </h2>
+              <p className={styles.modalDescription}>
+                {isStockOrETF
+                  ? `Select quantity to calculate total order price at live market rate.`
+                  : `Enter the amount you wish to invest and select frequency.`}
+              </p>
+
+              {isStockOrETF ? (
+                <>
+                  <div className={styles.modalInputGroup}>
+                    <label className={styles.modalLabel}>Market Price per {selectedItem.type === 'ETF' || selectedItem.type === 'ETFs' ? 'Unit' : 'Share'}</label>
+                    <div style={{ fontSize: '1.25rem', fontStyle: 'normal', fontWeight: '700', color: '#FF7F27', padding: '0.2rem 0' }}>
+                      ₹{pricePerUnit.toLocaleString('en-IN')}
+                    </div>
+                  </div>
+
+                  <div className={styles.modalInputGroup}>
+                    <label htmlFor="stockQuantity" className={styles.modalLabel}>
+                      Quantity ({selectedItem.type === 'ETF' || selectedItem.type === 'ETFs' ? 'Number of Units' : 'Number of Shares'})
+                    </label>
+                    <input
+                      type="number"
+                      id="stockQuantity"
+                      min="1"
+                      className={styles.modalInput}
+                      value={stockQuantity}
+                      onChange={(e) => setStockQuantity(e.target.value)}
+                      placeholder="e.g., 3"
+                    />
+                  </div>
+
+                  <div style={{ backgroundColor: '#fff7ed', padding: '0.85rem 1.1rem', borderRadius: '10px', border: '1px solid #ffedd5', marginBottom: '1.2rem' }}>
+                    <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500' }}>Total Amount Payable:</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#1e293b' }}>
+                      ₹{totalPricePayable.toLocaleString('en-IN')}
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '2px' }}>
+                      {currentQty} x ₹{pricePerUnit.toLocaleString('en-IN')}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.modalInputGroup}>
+                    <label htmlFor="investmentAmount" className={styles.modalLabel}>Investment Amount (₹)</label>
+                    <input
+                      type="number"
+                      id="investmentAmount"
+                      className={styles.modalInput}
+                      value={investmentAmount}
+                      onChange={(e) => setInvestmentAmount(e.target.value)}
+                      placeholder="e.g., 5000"
+                    />
+                  </div>
+                  <div className={styles.modalInputGroup}>
+                    <label htmlFor="investmentFrequency" className={styles.modalLabel}>Investment Frequency</label>
+                    <select
+                      id="investmentFrequency"
+                      className={styles.modalSelect}
+                      value={investmentFrequency}
+                      onChange={(e) => setInvestmentFrequency(e.target.value)}
+                    >
+                      <option value="one-time">One-Time</option>
+                      <option value="sip">SIP (Systematic Investment Plan)</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {message && <p className={`${styles.message} ${message.includes('successfully') || message.includes('purchased') ? styles.success : styles.error}`}>{message}</p>}
+              <div className={styles.modalActions}>
+                <button onClick={handleCloseInvestModal} className={styles.modalCancelButton}>Cancel</button>
+                <button onClick={handleInvest} className={styles.modalConfirmButton}>
+                  {isStockOrETF ? `Confirm Buy (${currentQty} ${currentQty === 1 ? 'Unit' : 'Units'})` : `Confirm Invest`}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
-};
-
-// Styles object for inline CSS
-const styles = {
-  pageContainer: {
-    minHeight: '100vh',
-    backgroundColor: '#f5f7fa',
-    fontFamily: 'Poppins, sans-serif',
-    padding: '20px',
-    boxSizing: 'border-box',
-  },
-  contentWrapper: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    paddingTop: '2rem',
-  },
-  exploreHeader: {
-    textAlign: 'left',
-    marginBottom: '2rem',
-    marginLeft: '1rem',
-  },
-  exploreTitle: {
-    fontSize: '2.2rem',
-    color: '#333',
-    marginBottom: '0.5rem',
-    fontWeight: '700',
-  },
-  exploreSubtitle: {
-    fontSize: '1rem',
-    color: '#666',
-  },
-  errorMessage: {
-    color: '#dc3545',
-    textAlign: 'center',
-    marginBottom: '1rem',
-    fontSize: '1rem',
-    fontWeight: '500',
-  },
-
-  // Filter Bar Styles
-  filterBar: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '1rem',
-    backgroundColor: '#fff',
-    borderRadius: '10px',
-    boxShadow: '0 5px 15px rgba(0,0,0,0.05)',
-    padding: '1.5rem',
-    marginBottom: '2rem',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  searchBox: {
-    display: 'flex',
-    alignItems: 'center',
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    padding: '0.5rem 1rem',
-    flexGrow: 1,
-    maxWidth: '300px',
-  },
-  searchIcon: {
-    marginRight: '10px',
-    color: '#888',
-  },
-  searchInput: {
-    border: 'none',
-    outline: 'none',
-    fontSize: '1rem',
-    flex: 1,
-    padding: '0.2rem 0',
-  },
-  filterSelect: {
-    padding: '0.8rem 1rem',
-    borderRadius: '8px',
-    border: '1px solid #ddd',
-    backgroundColor: '#fff',
-    fontSize: '0.95rem',
-    cursor: 'pointer',
-    outline: 'none',
-    minWidth: '120px',
-  },
-  filterButton: {
-    padding: '0.8rem 1.5rem',
-    backgroundColor: '#FF7F27',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '1rem',
-    fontWeight: '600',
-    transition: 'background-color 0.3s ease',
-    '&:hover': {
-      backgroundColor: '#E06B20',
-    },
-  },
-
-  // Category Tabs Styles
-  categoryTabs: {
-    display: 'flex',
-    gap: '0.5rem',
-    marginBottom: '2rem',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-  },
-  tabButton: {
-    padding: '0.8rem 1.5rem',
-    backgroundColor: '#fff',
-    color: '#555',
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '1rem',
-    fontWeight: '500',
-    transition: 'background-color 0.3s ease, border-color 0.3s ease',
-    '&:hover': {
-      borderColor: '#FF7F27',
-    },
-  },
-  activeTab: {
-    padding: '0.8rem 1.5rem',
-    backgroundColor: '#FF7F27',
-    color: '#fff',
-    border: '1px solid #FF7F27', // Corrected line
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '1rem',
-    fontWeight: '600',
-  },
-
-  message: {
-    textAlign: 'center',
-    marginTop: '1rem',
-    fontSize: '0.9rem',
-    color: '#28a745',
-    marginBottom: '1rem',
-  },
-
-  // Results Header (Count and Sort)
-  resultsHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '1.5rem',
-    flexWrap: 'wrap',
-    gap: '1rem',
-  },
-  resultsCount: {
-    fontSize: '1.1rem',
-    fontWeight: '600',
-    color: '#333',
-  },
-  sortSelect: {
-    padding: '0.6rem 1rem',
-    borderRadius: '8px',
-    border: '1px solid #ddd',
-    backgroundColor: '#fff',
-    fontSize: '0.95rem',
-    cursor: 'pointer',
-    outline: 'none',
-  },
-  toggleViewButton: {
-    backgroundColor: '#fff',
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    padding: '0.6rem 1rem',
-    cursor: 'pointer',
-    fontSize: '1.2rem',
-    color: '#555',
-    transition: 'background-color 0.3s ease, border-color 0.3s ease',
-    '&:hover': {
-      borderColor: '#FF7F27',
-    },
-  },
-
-  // Investment Cards Grid/List Styles
-  investmentCardsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-    gap: '1.5rem',
-  },
-  investmentCardsList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.8rem',
-  },
-  investmentCard: {
-    backgroundColor: '#fff',
-    borderRadius: '15px',
-    boxShadow: '0 5px 15px rgba(0,0,0,0.08)',
-    padding: '1.5rem',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-  },
-  investmentListItem: {
-    backgroundColor: '#fff',
-    borderRadius: '10px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-    padding: '1rem 1.5rem',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between', // Distribute items horizontally
-    flexWrap: 'wrap', // Allow wrapping on smaller screens
-    gap: '1rem', // Space between main sections in list item
-  },
-  // New styles for list item layout
-  listItemHeader: { // For logo, name, subtype, risk tag in list view
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem',
-    flex: '1 1 250px', // Allow this section to grow/shrink, min width 250px
-    minWidth: '200px', // Ensure it doesn't get too small
-  },
-  listItemNameAndSubtype: {
-    flex: 1, // Allow name/subtype to take available space
-  },
-  listItemDetails: { // For the market value, invested, CAGR etc. in list view
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '1.5rem', // Space between detail columns
-    flex: '2 1 400px', // Allow this section to grow/shrink, min width 400px
-    justifyContent: 'flex-start', // Align details to the start
-    '@media (max-width: 768px)': {
-      flex: '1 1 100%', // Take full width on smaller screens
-      justifyContent: 'space-around', // Distribute evenly
-      order: 1, // Place details below header on small screens
-    },
-  },
-  listItemDetailColumn: { // Individual detail item within list view
-    display: 'flex',
-    flexDirection: 'column',
-    textAlign: 'left',
-    minWidth: '80px', // Minimum width for each detail column
-  },
-  listItemActions: { // For buttons in list view
-    display: 'flex',
-    gap: '0.8rem',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-end', // Align buttons to the right
-    flex: '1 1 200px', // Allow actions to grow/shrink, min width 200px
-    '@media (max-width: 768px)': {
-      flex: '1 1 100%', // Take full width on smaller screens
-      justifyContent: 'center', // Center buttons
-      order: 2, // Place actions below details on small screens
-    },
-  },
-
-  // Existing styles (adjusted where necessary for consistency)
-  cardHeader: { // Used for grid view
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '1rem',
-    marginBottom: '1.5rem',
-    flexWrap: 'wrap',
-  },
-  cardLogo: {
-    width: '40px',
-    height: '40px',
-    borderRadius: '8px',
-    objectFit: 'cover',
-  },
-  cardTitle: {
-    fontSize: '1.2rem',
-    fontWeight: '600',
-    color: '#333',
-    margin: '0 0 0.2rem 0',
-    textAlign: 'left',
-  },
-  cardSubtitle: {
-    fontSize: '0.9rem',
-    color: '#777',
-    margin: 0,
-    textAlign: 'left',
-  },
-  riskTag: {
-    marginLeft: 'auto',
-    padding: '0.3rem 0.8rem',
-    borderRadius: '5px',
-    fontSize: '0.8rem',
-    fontWeight: '500',
-  },
-  cardDetailsGrid: { // Used for grid view
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
-    gap: '1rem',
-    marginBottom: '1.5rem',
-  },
-  detailItem: {
-    display: 'flex',
-    flexDirection: 'column',
-    textAlign: 'left',
-  },
-  detailLabel: {
-    fontSize: '0.8rem',
-    color: '#777',
-    marginBottom: '0.2rem',
-  },
-  detailValue: {
-    fontSize: '1.1rem',
-    fontWeight: '600',
-    color: '#333',
-  },
-  cardActions: { // Used for grid view
-    display: 'flex',
-    gap: '1rem',
-    marginTop: '1rem',
-    justifyContent: 'flex-end',
-    flexWrap: 'wrap',
-  },
-  addToWatchlistButton: {
-    padding: '0.8rem 1.2rem',
-    backgroundColor: '#fff',
-    color: '#FF7F27',
-    border: '1px solid #FF7F27',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '0.9rem',
-    fontWeight: '600',
-    transition: 'background-color 0.3s ease, color 0.3s ease',
-    '&:hover': {
-      backgroundColor: '#FF7F27',
-      color: '#fff',
-    },
-  },
-  addToButton: {
-    padding: '0.8rem 1.2rem',
-    backgroundColor: '#FF7F27',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '0.9rem',
-    fontWeight: '600',
-    transition: 'background-color 0.3s ease',
-    '&:hover': {
-      backgroundColor: '#E06B20',
-    },
-  },
-  noResultsMessage: {
-    textAlign: 'center',
-    fontSize: '1.1rem',
-    color: '#777',
-    marginTop: '3rem',
-    gridColumn: '1 / -1',
-  },
-
-  // Skeleton Loader Styles (reused from Dashboard.js and new ones)
-  '@keyframes pulse': {
-    '0%': { backgroundColor: '#e0e0e0' },
-    '50%': { backgroundColor: '#f0f0f0' },
-    '100%': { backgroundColor: '#e0e0e0' },
-  },
-  skeletonTextLarge: {
-    width: '80%',
-    height: '28px',
-    backgroundColor: '#e0e0e0',
-    borderRadius: '4px',
-    animation: 'pulse 1.5s infinite ease-in-out',
-    marginBottom: '10px',
-  },
-  skeletonTextMedium: {
-    width: '70%',
-    height: '20px',
-    backgroundColor: '#e0e0e0',
-    borderRadius: '4px',
-    animation: 'pulse 1.5s infinite ease-in-out',
-    marginBottom: '8px',
-  },
-  skeletonTextSmall: {
-    width: '50%',
-    height: '16px',
-    backgroundColor: '#e0e0e0',
-    borderRadius: '4px',
-    animation: 'pulse 1.5s infinite ease-in-out',
-  },
-  skeletonCircle: {
-    width: '40px',
-    height: '40px',
-    backgroundColor: '#e0e0e0',
-    borderRadius: '50%',
-    animation: 'pulse 1.5s infinite ease-in-out',
-  },
-  skeletonSearchBox: {
-    display: 'flex',
-    alignItems: 'center',
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    padding: '0.5rem 1rem',
-    flexGrow: 1,
-    maxWidth: '300px',
-    height: '40px', // Match input height
-    backgroundColor: '#e0e0e0', // Placeholder background
-    animation: 'pulse 1.5s infinite ease-in-out',
-  },
-  skeletonInput: {
-    flex: 1,
-    height: '20px',
-    backgroundColor: '#d0d0d0',
-    borderRadius: '4px',
-    animation: 'pulse 1.5s infinite ease-in-out',
-  },
-  skeletonSelect: {
-    padding: '0.8rem 1rem',
-    borderRadius: '8px',
-    border: '1px solid #ddd',
-    backgroundColor: '#e0e0e0',
-    minWidth: '120px',
-    height: '40px', // Match select height
-    animation: 'pulse 1.5s infinite ease-in-out',
-  },
-  skeletonButton: {
-    padding: '0.8rem 1.5rem',
-    backgroundColor: '#e0e0e0',
-    borderRadius: '8px',
-    width: '100px', // Example width
-    height: '40px', // Match button height
-    animation: 'pulse 1.5s infinite ease-in-out',
-  },
-  skeletonTabButton: {
-    padding: '0.8rem 1.5rem',
-    backgroundColor: '#e0e0e0',
-    borderRadius: '8px',
-    width: '120px', // Example width
-    height: '40px', // Match tab button height
-    animation: 'pulse 1.5s infinite ease-in-out',
-  },
-  skeletonToggleViewButton: {
-    backgroundColor: '#e0e0e0',
-    borderRadius: '8px',
-    width: '50px', // Match toggle button width
-    height: '40px', // Match toggle button height
-    animation: 'pulse 1.5s infinite ease-in-out',
-  },
-  skeletonInvestmentCardGrid: {
-    backgroundColor: '#fff',
-    borderRadius: '15px',
-    boxShadow: '0 5px 15px rgba(0,0,0,0.08)',
-    padding: '1.5rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    minHeight: '250px', // Ensure skeleton has some height
-    animation: 'pulse 1.5s infinite ease-in-out',
-  },
-  skeletonInvestmentCardList: {
-    backgroundColor: '#fff',
-    borderRadius: '10px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-    padding: '1rem 1.5rem',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: '1rem',
-    minHeight: '100px', // Ensure skeleton has some height
-    animation: 'pulse 1.5s infinite ease-in-out',
-  },
-  skeletonCardHeader: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '1rem',
-    width: '100%',
-  },
-  skeletonListItemHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem',
-    flex: '1 1 250px',
-  },
-  skeletonTextGroup: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '5px',
-  },
-  skeletonRiskTag: {
-    marginLeft: 'auto',
-    width: '80px',
-    height: '25px',
-    backgroundColor: '#d0d0d0',
-    borderRadius: '5px',
-    animation: 'pulse 1.5s infinite ease-in-out',
-  },
-  skeletonCardDetailsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
-    gap: '1rem',
-    width: '100%',
-  },
-  skeletonListItemDetails: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '1.5rem',
-    flex: '2 1 400px',
-  },
-  skeletonDetailItem: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '5px',
-    minWidth: '80px',
-  },
-  skeletonCardActions: {
-    display: 'flex',
-    gap: '1rem',
-    marginTop: '1rem',
-    justifyContent: 'flex-end',
-    width: '100%',
-  },
-  skeletonListItemActions: {
-    display: 'flex',
-    gap: '0.8rem',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-end',
-    flex: '1 1 200px',
-  },
-  skeletonButtonSmall: {
-    padding: '0.8rem 1.2rem',
-    backgroundColor: '#e0e0e0',
-    borderRadius: '8px',
-    width: '120px', // Example width
-    height: '35px', // Match button height
-    animation: 'pulse 1.5s infinite ease-in-out',
-  },
 };
 
 export default Explore;

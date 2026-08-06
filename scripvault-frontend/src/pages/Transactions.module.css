@@ -1,0 +1,212 @@
+/* frontend/src/pages/Transactions.module.css */
+
+.pageContainer {
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  font-family: 'Poppins', sans-serif;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.contentWrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: 1.5rem;
+}
+
+.headerSection {
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 2.2rem;
+  color: #1a202c;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #718096;
+  margin: 0;
+}
+
+/* Summary Grid */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.summaryCard {
+  background-color: #ffffff;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #edf2f7;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.summaryLabel {
+  font-size: 0.85rem;
+  color: #718096;
+  font-weight: 500;
+}
+
+.summaryValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.positive {
+  color: #28a745;
+}
+
+.negative {
+  color: #dc3545;
+}
+
+/* Filter Tabs */
+.filterContainer {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.filterTab {
+  background-color: #ffffff;
+  color: #4a5568;
+  border: 1px solid #cbd5e0;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filterTab:hover {
+  background-color: #edf2f7;
+}
+
+.activeFilterTab {
+  background-color: #FF7F27;
+  color: #ffffff;
+  border-color: #FF7F27;
+}
+
+/* Transactions Table */
+.tableCard {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  border: 1px solid #edf2f7;
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.table th {
+  background-color: #f7fafc;
+  color: #4a5568;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #edf2f7;
+  font-size: 0.95rem;
+  color: #2d3748;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Badges */
+.badgeBuy {
+  display: inline-block;
+  background-color: #e6fffa;
+  color: #234e52;
+  border: 1px solid #81e6d9;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.badgeSell {
+  display: inline-block;
+  background-color: #fff5f5;
+  color: #9b2c2c;
+  border: 1px solid #feb2b2;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.assetName {
+  font-weight: 600;
+  color: #1a202c;
+  display: block;
+}
+
+.assetSymbol {
+  font-size: 0.8rem;
+  color: #718096;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #718096;
+}
+
+.emptyTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 0.5rem;
+}
+
+/* Skeleton Loading */
+.skeletonRow {
+  height: 48px;
+  background-color: #edf2f7;
+  margin: 10px;
+  border-radius: 8px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 0.4; }
+  100% { opacity: 0.7; }
+}
+
+@media (max-width: 768px) {
+  .table th, .table td {
+    padding: 0.75rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}

@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, NavLink, useLocation } from 'react-router-dom'; // Import NavLink and useLocation
+import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // Assuming AuthContext provides logout
 import { getUserProfile } from '../services/profileService'; // Import profile service
 
 const Layout = () => {
   const { logout } = useAuth(); // Your original logout functionality
-  const location = useLocation(); // Hook to get current location for active link styling
 
   const [userProfile, setUserProfile] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -42,8 +41,7 @@ const Layout = () => {
         <div style={styles.headerContent}>
           {/* Logo */}
           <NavLink to="/dashboard" style={styles.logoLink}>
-            <img src="https://assets-global.website-files.com/63f734fb25b6c647a0c249c1/64016a4b162f4b01e74a8968_logo.svg" alt="ScripVault Logo" style={styles.logoImg} />
-            <span style={styles.logoText}>ScripVault</span>
+            <img src="/logo.svg" alt="ScripVault Logo" style={styles.logoImg} />
           </NavLink>
 
           {/* Navigation Links */}
@@ -52,6 +50,7 @@ const Layout = () => {
             <NavLink to="/explore" style={getNavLinkStyle}>Explore</NavLink>
             <NavLink to="/watchlist" style={getNavLinkStyle}>Watchlist</NavLink>
             <NavLink to="/investments" style={getNavLinkStyle}>Investments</NavLink>
+            <NavLink to="/transactions" style={getNavLinkStyle}>Transactions</NavLink>
             <NavLink to="/ask" style={getNavLinkStyle}>Ask Experts</NavLink> {/* Using /ask as per your route */}
             <NavLink to="/profile" style={getNavLinkStyle}>Profile</NavLink>
           </nav>
@@ -61,9 +60,11 @@ const Layout = () => {
             {loadingProfile ? (
               <div style={styles.userAvatarPlaceholder}></div> // Placeholder for loading
             ) : errorProfile ? (
-              <img src="https://placehold.co/40x40/dc3545/white?text=!" alt="Error" style={styles.userAvatar} />
+              <img src="/user-avatar.svg" alt="User Avatar" style={styles.userAvatar} />
             ) : (
-              <img src={userProfile?.profileSummary?.profilePic || "https://placehold.co/40x40/cccccc/white?text=User"} alt="User Avatar" style={styles.userAvatar} />
+              <NavLink to="/profile">
+                <img src={userProfile?.profileSummary?.profilePic && !userProfile?.profileSummary?.profilePic.includes('placehold') ? userProfile.profileSummary.profilePic : "/user-avatar.svg"} alt="User Avatar" style={styles.userAvatar} title="View Profile" />
+              </NavLink>
             )}
             <button onClick={logout} style={styles.logoutButton}>Logout</button>
           </div>
@@ -91,9 +92,12 @@ const styles = {
   // Header/Top Navigation Bar Styles
   header: {
     backgroundColor: '#ffffff', // White background for the header
-    boxShadow: '0 2px 4px rgba(0,0,0,0.05)', // Subtle shadow
-    padding: '1rem 2rem',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.06)', // Subtle shadow
+    padding: '0.8rem 2rem',
     borderBottom: '1px solid #eee', // Light separator line
+    position: 'sticky',
+    top: 0,
+    zIndex: 1000,
   },
   headerContent: {
     display: 'flex',
@@ -110,7 +114,7 @@ const styles = {
     textDecoration: 'none',
   },
   logoImg: {
-    height: '30px', // Adjust size as needed
+    height: '42px',
     marginRight: '10px',
   },
   logoText: {

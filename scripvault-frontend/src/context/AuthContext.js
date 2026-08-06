@@ -21,14 +21,9 @@ export const AuthProvider = ({ children }) => {
   // Effect to handle initial authentication check and redirect
   useEffect(() => {
     if (user && user.token) {
-      // If user is logged in, and not already on dashboard, navigate to dashboard
+      // If user is logged in and on login/signup, navigate to dashboard
       if (window.location.pathname === '/login' || window.location.pathname === '/signup') {
         navigate('/dashboard');
-      }
-    } else {
-      // If no user/token, ensure they are on login/signup page if not already
-      if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
-        navigate('/login');
       }
     }
   }, [user, navigate]);
@@ -50,6 +45,7 @@ export const AuthProvider = ({ children }) => {
         const loggedInUser = { email, token: data.token };
         setUser(loggedInUser);
         localStorage.setItem('user', JSON.stringify(loggedInUser));
+        localStorage.setItem('token', data.token);
         setAuthMessage('Login successful! Redirecting...');
         // Navigation handled by useEffect
       } else {
@@ -95,6 +91,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     setAuthMessage('Logged out successfully.');
     navigate('/login');
     setTimeout(() => setAuthMessage(''), 3000);

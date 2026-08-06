@@ -68,10 +68,10 @@ const Signup = () => {
       <div style={styles.signupCard}>
         {/* Left Side: Signup Form */}
         <div style={styles.signupFormContainer}>
-          {/* Logo and Headings */}
           <div style={styles.logoContainer}>
-            <img src="https://assets-global.website-files.com/63f734fb25b6c647a0c249c1/64016a4b162f4b01e74a8968_logo.svg" alt="ScripVault Logo" style={styles.logoImg} />
-            <h1 style={styles.logoText}>ScripVault</h1>
+            <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
+              <img src="/logo.svg" alt="ScripVault" style={styles.logoImg} />
+            </Link>
           </div>
           <h2 style={styles.createAccountText}>Create Your Account</h2>
           <p style={styles.investmentJourneyText}>Start your investment journey today</p>
@@ -211,6 +211,13 @@ const Signup = () => {
             <p style={styles.alreadyAccount}>
               Already have an account? <Link to="/login" style={styles.loginLink}>Login</Link>
             </p>
+
+            {/* Back to Home Link - Placed Below Form */}
+            <div style={styles.bottomNavRow}>
+              <Link to="/" style={styles.backHomeLink}>
+                &larr; Back to Home
+              </Link>
+            </div>
           </form>
         </div>
 
@@ -284,20 +291,31 @@ const styles = {
       padding: '2rem',
     },
   },
+  bottomNavRow: {
+    marginTop: '1rem',
+    width: '100%',
+    textAlign: 'center',
+  },
+  backHomeLink: {
+    color: '#718096',
+    fontSize: '0.88rem',
+    fontWeight: '600',
+    textDecoration: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    transition: 'color 0.2s ease',
+  },
   logoContainer: {
     display: 'flex',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: '1rem',
+    width: '100%',
+    marginBottom: '1.2rem',
   },
   logoImg: {
-    height: '35px',
-    marginRight: '10px',
-  },
-  logoText: {
-    fontSize: '1.8rem',
-    fontWeight: '700',
-    color: '#FF7F27',
-    margin: 0,
+    height: '48px',
+    maxWidth: '220px',
+    objectFit: 'contain',
   },
   createAccountText: {
     fontSize: '1.8rem',

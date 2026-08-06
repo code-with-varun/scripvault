@@ -10,6 +10,7 @@ import Explore from './pages/Explore';
 import Watchlist from './pages/Watchlist';
 import Profile from './pages/Profile';
 import AskExperts from './pages/AskExperts';
+import Transactions from './pages/Transactions';
 import PrivateRoute from './components/PrivateRoute';
 import Layout from './components/Layout';
 import { AuthProvider } from './context/AuthContext';
@@ -24,13 +25,19 @@ const App = () => {
           <Route path="/signup" element={<Signup />} />
           <Route element={<PrivateRoute />}>
             <Route element={<Layout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/Dashboard" element={<Dashboard />} />
               
               <Route path="/investments" element={<Investments />} />
+              <Route path="/transactions" element={<Transactions />} />
               <Route path="/explore" element={<Explore />} />
               <Route path="/watchlist" element={<Watchlist />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/ask" element={<AskExperts />} />
+              <Route path="/fixed-deposits" element={<Explore />} />
+              <Route path="/nfos" element={<Explore />} />
+              <Route path="/etfs" element={<Explore />} />
+              <Route path="/nps" element={<Explore />} />
 
             </Route>
           </Route>

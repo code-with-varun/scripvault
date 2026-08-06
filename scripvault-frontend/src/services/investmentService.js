@@ -1,13 +1,12 @@
-// frontend/services/investmentService.js
-// This service will now interact with your backend API
-// instead of mock data.
+// frontend/src/services/investmentService.js
 
-// Define your backend API base URL
-const API_BASE_URL = 'http://localhost:3001'; // Ensure this matches your backend server's address
+const API_BASE_URL = 'http://localhost:3001/api'; // Standardized to include /api
 
 // Helper function to get the JWT token from localStorage
 const getAuthToken = () => {
   try {
+    const token = localStorage.getItem('token');
+    if (token) return token;
     const user = JSON.parse(localStorage.getItem('user'));
     return user?.token;
   } catch (error) {
@@ -16,6 +15,68 @@ const getAuthToken = () => {
   }
 };
 
+/**
+ * Helper function to parse response, handling both JSON and non-JSON errors.
+ * Consumes the response body ONCE.
+ */
+const parseResponse = async (response) => {
+  let data;
+  try {
+    data = await response.json(); // Attempt to parse as JSON first
+  } catch (e) {
+    // If JSON parsing fails, it might be plain text or empty body
+    data = await response.text(); // Get as text
+    if (!response.ok) {
+        // If response is not OK and not JSON, throw a generic error with text content
+        throw new Error(`Server error: ${response.status} ${response.statusText}. Response: ${data.substring(0, 200)}`);
+    }
+    // If response is OK but not JSON (e.g., 204 No Content), data will be empty string or simple text.
+    return data; // Return text if it was successful non-JSON
+  }
+
+  if (!response.ok) {
+    // If response is not OK, and we successfully parsed JSON, use its message
+    const errorMessage = data.message || data.error || 'An unknown error occurred';
+    throw new Error(`API error (${response.status}): ${errorMessage}`);
+  }
+
+  return data; // Return parsed JSON data
+};
+
+
+/**
+ * Adds a new investment to the user's portfolio.
+ * @param {Object} investmentData - The data for the new investment (name, type, amount, etc.).
+ * @returns {Promise<Object>} The newly created investment object from the backend.
+ */
+export const addInvestment = async (investmentData) => {
+  const token = getAuthToken();
+  if (!token) {
+    console.error("No authentication token found for addInvestment.");
+    throw new Error("Authentication required.");
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/investments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(investmentData),
+    });
+
+    return await parseResponse(response);
+  } catch (error) {
+    console.error('Error adding investment:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches all investments for the current user.
+ * @returns {Promise<Array<Object>>} An array of investment objects.
+ */
 export const getInvestments = async () => {
   const token = getAuthToken();
   if (!token) {
@@ -24,59 +85,26 @@ export const getInvestments = async () => {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/portfolio`, { // Fetch from portfolio to get all investments
+    const response = await fetch(`${API_BASE_URL}/investments`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, // Include the JWT token
+        'Authorization': `Bearer ${token}`,
       },
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to fetch investments');
-    }
-
-    const data = await response.json();
-    // The backend's /api/portfolio returns { user: ..., investments: [...] }
-    return data.investments || []; // Return the array of investments
+    return await parseResponse(response);
   } catch (error) {
-    console.error("Error in getInvestments:", error);
-    throw error; // Re-throw to be handled by the component
-  }
-};
-
-export const addInvestment = async (newInvestment) => {
-  const token = getAuthToken();
-  if (!token) {
-    console.error("No authentication token found for addInvestment.");
-    throw new Error("Authentication required.");
-  }
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/portfolio/invest`, { // Use the /invest endpoint
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, // Include the JWT token
-      },
-      body: JSON.stringify(newInvestment), // Send the new investment data
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to add investment');
-    }
-
-    const data = await response.json();
-    // The backend's /api/portfolio/invest returns the updated portfolio with populated investments.
-    return data.investments; // Return the full updated investments array
-  } catch (error) {
-    console.error("Error in addInvestment:", error);
+    console.error('Error fetching investments:', error);
     throw error;
   }
 };
 
+/**
+ * Deletes an investment by its ID.
+ * @param {string} id - The ID of the investment to delete.
+ * @returns {Promise<Object>} A success message.
+ */
 export const deleteInvestment = async (id) => {
   const token = getAuthToken();
   if (!token) {
@@ -85,23 +113,48 @@ export const deleteInvestment = async (id) => {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/investment/${id}`, { // Use the specific investment delete endpoint
+    const response = await fetch(`${API_BASE_URL}/investments/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, // Include the JWT token
+        'Authorization': `Bearer ${token}`,
       },
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to delete investment');
-    }
-
-    // Backend's delete endpoint returns a success message.
-    return true; // Indicate success
+    return await parseResponse(response);
   } catch (error) {
-    console.error("Error in deleteInvestment:", error);
+    console.error('Error deleting investment:', error);
     throw error;
   }
 };
+
+/**
+ * Sells a specified quantity of units from an investment holding.
+ * @param {string} id - The ID of the investment holding to sell.
+ * @param {Object} sellData - { unitsToSell: number, sellPrice: number }
+ * @returns {Promise<Object>} The sell transaction summary result.
+ */
+export const sellInvestment = async (id, sellData) => {
+  const token = getAuthToken();
+  if (!token) {
+    console.error("No authentication token found for sellInvestment.");
+    throw new Error("Authentication required.");
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/investments/${id}/sell`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(sellData),
+    });
+
+    return await parseResponse(response);
+  } catch (error) {
+    console.error('Error selling investment:', error);
+    throw error;
+  }
+};
+
