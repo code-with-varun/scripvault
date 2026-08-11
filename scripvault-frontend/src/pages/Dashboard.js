@@ -2,107 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 // Import your services, which now directly import mock data
 import { getDashboardData } from '../services/dashboardService';
-import { getNetWorthTrend } from '../services/networthService';
-
-/**
- * Simple SVG Chart Placeholder component for Net Worth Trend.
- * This component draws a basic line chart using SVG.
- * In a real application, you would use a dedicated charting library (e.g., Recharts, Chart.js).
- */
-const SimpleNetWorthChart = ({ data, isLoading }) => {
-  if (isLoading) {
-    return (
-      <div style={styles.skeletonChartContainer}>
-        <div style={styles.skeletonChart}></div>
-      </div>
-    );
-  }
-
-  if (!data || data.length === 0) {
-    return <div style={{ textAlign: 'center', color: '#777', padding: '2rem' }}>No trend data available to display chart.</div>;
-  }
-
-  const values = data.map(d => d.value);
-  const minVal = Math.min(...values) * 0.9;
-  const maxVal = Math.max(...values) * 1.1;
-
-  const width = 600;
-  const height = 300;
-  const padding = 40;
-
-  const points = data.map((d, i) => {
-    const x = padding + (i / (data.length - 1)) * (width - 2 * padding);
-    const y = height - padding - ((d.value - minVal) / (maxVal - minVal)) * (height - 2 * padding);
-    return `${x},${y}`;
-  }).join(' ');
-
-  const monthLabels = data.map(d => d.month);
-
-  // Helper for currency formatting within the chart
-  const formatCurrencyForChart = (value) => {
-    if (value === null || value === undefined) return '--';
-    return `₹${parseFloat(value).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
-  };
-
-  return (
-    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: 'auto' }}>
-      {/* X-axis line */}
-      <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="#ccc" strokeWidth="1" />
-      {/* Y-axis line */}
-      <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="#ccc" strokeWidth="1" />
-
-      {/* X-axis labels */}
-      {monthLabels.map((label, i) => (
-        <text
-          key={i}
-          x={padding + (i / (data.length - 1)) * (width - 2 * padding)}
-          y={height - padding + 20}
-          textAnchor="middle"
-          fontSize="12"
-          fill="#777"
-        >
-          {label}
-        </text>
-      ))}
-
-      {/* Y-axis labels (simplified) */}
-      {[minVal, (minVal + maxVal) / 2, maxVal].map((val, i) => (
-        <text
-          key={i}
-          x={padding - 10}
-          y={height - padding - ((val - minVal) / (maxVal - minVal)) * (height - 2 * padding)}
-          textAnchor="end"
-          alignmentBaseline="middle"
-          fontSize="12"
-          fill="#777"
-        >
-          {formatCurrencyForChart(val)}
-        </text>
-      ))}
-
-      {/* Data line */}
-      <polyline
-        fill="none"
-        stroke="#FF7F27"
-        strokeWidth="3"
-        points={points}
-      />
-      {/* Optional: Add circles for data points */}
-      {data.map((d, i) => (
-        <circle
-          key={i}
-          cx={padding + (i / (data.length - 1)) * (width - 2 * padding)}
-          cy={height - padding - ((d.value - minVal) / (maxVal - minVal)) * (height - 2 * padding)}
-          r="4"
-          fill="#FF7F27"
-          stroke="#fff"
-          strokeWidth="2"
-        />
-      ))}
-    </svg>
-  );
-};
-
 
 /**
  * Interactive SVG Donut/Pie Chart component for Portfolio Asset Allocation.
@@ -227,8 +126,6 @@ const Dashboard = () => {
     holdingsSummary: [],
   });
 
-  const [trend, setTrend] = useState([]);
-
   useEffect(() => {
     const fetchAllDashboardData = async () => {
       setLoading(true);
@@ -237,11 +134,6 @@ const Dashboard = () => {
         // Fetch main dashboard data using the service
         const dashboardRes = await getDashboardData();
         setData(dashboardRes);
-
-        // Fetch net worth trend data using the service
-        const trendRes = await getNetWorthTrend();
-        setTrend(trendRes);
-
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
         setError("Failed to load dashboard data. Please check your mock data setup.");
@@ -260,7 +152,6 @@ const Dashboard = () => {
           },
           holdingsSummary: [],
         });
-        setTrend([]);
       } finally {
         setLoading(false);
       }
@@ -271,7 +162,8 @@ const Dashboard = () => {
 
   // Real-time SSE stream for Market Indices & Portfolio Net Worth / Gains Live Simulation
   useEffect(() => {
-    const eventSource = new EventSource('http://localhost:3001/api/explore/stream');
+    const apiBase = process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace(/\/api\/?$/, '') : 'http://localhost:3001';
+    const eventSource = new EventSource(`${apiBase}/api/explore/stream`);
 
     eventSource.onmessage = (event) => {
       try {

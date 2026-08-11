@@ -1,6 +1,6 @@
 // frontend/src/services/watchlistService.js
 
-const API_BASE_URL = 'http://localhost:3001/api'; // Updated API_BASE_URL as per your backend port
+const API_BASE_URL = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace(/\/api\/?$/, '') : 'http://localhost:3001') + '/api';
 
 /**
  * Helper function to parse response, handling both JSON and non-JSON errors.

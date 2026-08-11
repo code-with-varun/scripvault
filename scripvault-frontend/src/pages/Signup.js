@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react'; // Import useEffect
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Signup = () => {
   const { register, authMessage } = useAuth(); // Get register function and authMessage
-  const navigate = useNavigate();
 
   const [form, setForm] = useState({
     fullName: '',

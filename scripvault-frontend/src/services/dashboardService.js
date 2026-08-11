@@ -3,7 +3,7 @@
 // and provide a structured response for the frontend Dashboard.
 
 // Define your backend API base URL
-const API_BASE_URL = 'http://localhost:3001'; // Ensure this matches your backend server's address
+const API_BASE_URL = process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace(/\/api\/?$/, '') : 'http://localhost:3001';
 
 // Helper function to get the JWT token from localStorage
 const getAuthToken = () => {

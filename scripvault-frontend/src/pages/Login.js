@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
-  const { login, authMessage, isAuthenticated } = useAuth(); // Get authMessage and isAuthenticated
+  const { login, authMessage } = useAuth(); // Get authMessage
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState(''); // Use local error for input validation

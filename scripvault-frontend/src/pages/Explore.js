@@ -102,7 +102,8 @@ const Explore = () => {
 
   // Real-time SSE price update stream connection
   useEffect(() => {
-    const eventSource = new EventSource('http://localhost:3001/api/explore/stream');
+    const apiBase = process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace(/\/api\/?$/, '') : 'http://localhost:3001';
+    const eventSource = new EventSource(`${apiBase}/api/explore/stream`);
 
     eventSource.onmessage = (event) => {
       try {

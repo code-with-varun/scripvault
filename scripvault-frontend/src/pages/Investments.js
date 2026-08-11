@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getInvestments, deleteInvestment, sellInvestment } from '../services/investmentService';
+import { getInvestments, sellInvestment } from '../services/investmentService';
 import { getTransactions } from '../services/transactionService';
 import styles from './Investments.module.css';
 
@@ -62,7 +62,8 @@ const Investments = () => {
 
   // Real-time SSE price stream connection to simulate live market fluctuations
   useEffect(() => {
-    const eventSource = new EventSource('http://localhost:3001/api/explore/stream');
+    const apiBase = process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace(/\/api\/?$/, '') : 'http://localhost:3001';
+    const eventSource = new EventSource(`${apiBase}/api/explore/stream`);
 
     eventSource.onmessage = (event) => {
       try {
@@ -109,20 +110,6 @@ const Investments = () => {
       eventSource.close();
     };
   }, []);
-
-  // Handle Delete logic
-  const handleDelete = async (id, name) => {
-    setMessage('');
-    try {
-      await deleteInvestment(id);
-      setInvestments(prev => prev.filter(item => item._id !== id));
-      setMessage(`'${name}' removed from portfolio. ✅`);
-    } catch (err) {
-      console.error("Failed to delete investment:", err);
-      setMessage(`Failed to remove investment from portfolio: ${err.message}`);
-    }
-    setTimeout(() => setMessage(''), 4000);
-  };
 
   // Open Sell Modal - Prefills with currently changed simulated price
   const handleOpenSellModal = (item) => {
