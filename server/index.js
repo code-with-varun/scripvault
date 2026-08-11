@@ -18,8 +18,9 @@ const PORT = process.env.PORT || 3001; // Use port from .env or default to 3001
 app.use(cors()); // Enable CORS for all incoming requests from your frontend
 app.use(express.json()); // Replaces body-parser for parsing JSON request bodies
 
-// --- DEBUGGING: Log MONGODB_URI to check if it's loaded ---
-console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'Loaded (contains value)' : 'Undefined or empty');
+// --- DEBUGGING: Log MongoDB URI to check if it's loaded ---
+const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+console.log('MongoDB URI:', mongoUri ? 'Loaded (contains value)' : 'Undefined or empty');
 // --- END DEBUGGING ---
 
 // Import your route files
@@ -63,7 +64,7 @@ const seedDemoUser = async () => {
 // --- Data Seeding Logic for Stocks from explore.json ---
 const seedStocks = async () => {
   try {
-    const exploreJsonPath = path.join(__dirname, '..', 'server/data', 'explore.json');
+    const exploreJsonPath = path.join(__dirname, 'data', 'explore.json');
     const rawData = await fs.readFile(exploreJsonPath, 'utf8');
     const exploreData = JSON.parse(rawData);
 
@@ -116,10 +117,14 @@ const seedStocks = async () => {
 
 // MongoDB Connection
 const connectDB = async () => {
+  const activeUri = process.env.MONGODB_URI || process.env.MONGO_URI;
   try {
-    console.log("Connecting to live MongoDB Atlas database...");
-    await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
-    console.log("Connected to MongoDB Atlas database successfully!");
+    if (!activeUri) {
+      throw new Error("Neither MONGODB_URI nor MONGO_URI is set in environment variables");
+    }
+    console.log("Connecting to live MongoDB database...");
+    await mongoose.connect(activeUri, { serverSelectionTimeoutMS: 10000 });
+    console.log("Connected to MongoDB database successfully!");
     await seedStocks();
     await seedDemoUser();
     const { startMarketEngine } = require('./services/marketEngine');
