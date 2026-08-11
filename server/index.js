@@ -151,6 +151,7 @@ connectDB();
 
 // Mount your routes
 app.use('/auth', authRoutes); // Authentication routes (e.g., /auth/register, /auth/login)
+app.use('/api/auth', authRoutes); // Also support /api/auth/login and /api/auth/register
 app.use('/api/profile', profileRouter);
 app.use('/api/portfolio', portfolioRouter);
 app.use('/api/investment', investmentRouter);
